@@ -4,7 +4,25 @@ from numpy.linalg import solve
 
 from utils.commons.tensor_utils import convert_to_tensor
 
+# ========================================
+def find_k_nearest_neighbors_cosine(feats, feat_database, K=10):
+    """使用餘弦相似度尋找 KNN"""
+    feats = convert_to_tensor(feats)
+    feat_database = convert_to_tensor(feat_database)
 
+    # 歸一化，將向量轉換為單位向量
+    feats_norm = torch.nn.functional.normalize(feats, p=2, dim=1)
+    feat_database_norm = torch.nn.functional.normalize(feat_database, p=2, dim=1)
+
+    # 計算餘弦相似度（等同於歸一化後的內積）
+    # 值越大表示越相似
+    similarity_mat = torch.matmul(feats_norm, feat_database_norm.t())
+
+    # topk 需要找最大的值，所以 largest=True
+    ind = similarity_mat.topk(K, dim=1, largest=True).indices
+    return ind
+
+# ========================================
 def find_k_nearest_neighbors(feats, feat_database, K=10):
     """
     KNN (K-nearest neighbor), return the index of k-nearest neighbors in the feat_database
@@ -87,7 +105,11 @@ def compute_LLE_projection(feats, feat_database, K=10):
     return:
         weights: [N_sample_K, ] 
     """
+    # ======================================
     index_of_K_neighbors_in_database = find_k_nearest_neighbors(feats, feat_database, K) # [N_sample_in_batch, K=10]
+    
+    # index_of_K_neighbors_in_database = find_k_nearest_neighbors_cosine(feats, feat_database, K) # [N_sample_in_batch, K=10]
+    # ======================================
     feat_base = feat_database[index_of_K_neighbors_in_database]
     # print("performing LLE projection ...")
     feat_fuse, errors, weights = solve_LLE_projection_batch(feats, feat_base)

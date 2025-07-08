@@ -218,6 +218,11 @@ class Face3DHelper(nn.Module):
         # https://github.com/google-ai-edge/mediapipe/issues/2040
         # lips_index = [61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291
         #   95, 88, 178, 87, 14, 317, 402, 318, 324, 308, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308]
+        # # method 4 (use displacement of geneface + emotalk lm468)
+        elif bs is not None and bs_lm_area == 4:
+            mean_face = mean_face.reshape([1, -1, 3]) # [1, N, 3]
+            # face = (face) + (bs - mean_face) # geneface full face + emotalk face displacement    
+            face = 0.5*(face - mean_face) + bs # delta of geneface + emotalk lm468 full face
         
         
         
@@ -336,7 +341,16 @@ class Face3DHelper(nn.Module):
             
             bs_delta[:, lips_index, :] = face[:, lips_index, :]
             
-            face = bs_delta        
+            face = bs_delta
+            
+            
+        # method 4 (use displacement of geneface + emotalk lm468)
+        elif bs is not None and bs_lm_area == 4:
+            mean_face = self.key_mean_shape.squeeze().reshape([1, -1]) # [3*N, 1] ==> [1, 3*N]
+            mean_face = mean_face.reshape([1, -1, 3]) # [1, N, 3]
+            face = face.reshape([face.shape[0], -1, 3]) # [t,N,3]
+            face = (0.5*face) + (bs - mean_face) # delta of geneface + delta of emotalk lm468
+
         # ============== bs_ver_modified ==============
         
         

@@ -64,7 +64,27 @@ from modules.radnerfs.radnerf_torso_sr import RADNeRFTorsowithSR
 
 
 face3d_helper = None
-def vis_cano_lm3d_to_imgs(cano_lm3d, hw=512):
+def vis_cano_lm3d_to_imgs(cano_lm3d, hw=512, color_label='red'):
+    # ============== bs_ver_modified ==============
+    color = (255, 0, 0) # default red
+    if color_label == 'red':
+        color = (255, 0, 0)
+    elif color_label == 'green':
+        color = (0, 255, 0)
+    elif color_label == 'blue':
+        color = (0, 0, 255)        
+        
+    # load img(.png) background
+    img_bg = load_img_to_512_hwc_array('emogene/experiment/data/may_cano_lm3d_img.png')
+    if img_bg is not None:
+        img_bg = cv2.resize(img_bg, (hw, hw), interpolation=cv2.INTER_LINEAR)
+        img_bg = cv2.cvtColor(img_bg, cv2.COLOR_BGR2RGB)
+        img_bg = img_bg.astype(np.uint8)
+    else:
+        img_bg = np.ones([hw, hw, 3], dtype=np.uint8) * 255
+    # ============== bs_ver_modified ==============
+    
+    
     cano_lm3d_ = cano_lm3d[:1, ].repeat([len(cano_lm3d),1,1])
     cano_lm3d_[:, 17:27] = cano_lm3d[:, 17:27] # brow
     cano_lm3d_[:, 36:48] = cano_lm3d[:, 36:48] # eye
@@ -82,18 +102,24 @@ def vis_cano_lm3d_to_imgs(cano_lm3d, hw=512):
     for i_img in range(len(cano_lm3d)):
         # lm2d = cano_lm3d[i_img ,:, 1:] # [68, 2]
         lm2d = cano_lm3d[i_img ,:, :2] # [68, 2]
-        img = np.ones([WH, WH, 3], dtype=np.uint8) * 255
+        # img = np.ones([WH, WH, 3], dtype=np.uint8) * 255
+        img = copy.deepcopy(img_bg)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # flip back
+        img = cv2.flip(img, 0)
         
         for i in range(len(lm2d)):
             x, y = lm2d[i]
-            color = (255,0,0)
+            # color = (255,0,0)
             img = cv2.circle(img, center=(x,y), radius=3, color=color, thickness=-1)
             font = cv2.FONT_HERSHEY_SIMPLEX
         img = cv2.flip(img, 0)
         for i in range(len(lm2d)):
             x, y = lm2d[i]
             y = WH - y
-            img = cv2.putText(img, f"{i}", org=(x,y), fontFace=font, fontScale=0.3, color=(255,0,0))
+            # img = cv2.putText(img, f"{i}", org=(x,y), fontFace=font, fontScale=0.3, color=(255,0,0))
+            img = cv2.putText(img, f"{i}", org=(x,y), fontFace=font, fontScale=0.3, color=color)
+            
         frame_lst.append(img)
     return frame_lst
 
@@ -354,14 +380,14 @@ class GeneFace2Infer:
         # ============== bs_ver_modified ==============
         # # save face of mean+id (used for preprocessing base lm3d of a new head)
         
-        face_temp = self.face3d_helper.get_mean_plus_id(id, exp, status='with_id')
-        # save face[0]
-        # np.save('./_test/shapes/mean_plus_id.npy', face_temp[0].cpu().numpy())
-        np.save('./_test/shapes/mean_plus_id_feng.npy', face_temp[0].cpu().numpy())
+        # face_temp = self.face3d_helper.get_mean_plus_id(id, exp, status='with_id')
+        # # save face[0]
+        # # np.save('./_test/shapes/mean_plus_id.npy', face_temp[0].cpu().numpy())
+        # np.save('./_test/shapes/mean_plus_id_feng.npy', face_temp[0].cpu().numpy())
         
-        print('='*20)
-        print(face_temp[0].shape)
-        print('='*20)
+        # print('='*20)
+        # print(face_temp[0].shape)
+        # print('='*20)
         
         # ============== bs_ver_modified ==============
         
@@ -431,25 +457,30 @@ class GeneFace2Infer:
         # note that SECC is only used for visualization
         zero_eulers = torch.zeros([id.shape[0], 3]).to(id.device)
         zero_trans = torch.zeros([id.shape[0], 3]).to(exp.device)
-        if inp['debug']:
-            with torch.no_grad():
-                chunk_size = 50
-                drv_secc_color_lst = []
-                num_iters = len(id)//chunk_size if len(id)%chunk_size == 0 else len(id)//chunk_size+1
-                for i in tqdm.trange(num_iters, desc="rendering secc"):
-                    torch.cuda.empty_cache()
-                    face_mask, drv_secc_color = self.secc_renderer(id[i*chunk_size:(i+1)*chunk_size], exp[i*chunk_size:(i+1)*chunk_size], zero_eulers[i*chunk_size:(i+1)*chunk_size], zero_trans[i*chunk_size:(i+1)*chunk_size])
-                    drv_secc_color_lst.append(drv_secc_color.cpu())
-            drv_secc_colors = torch.cat(drv_secc_color_lst, dim=0)
-            _, src_secc_color = self.secc_renderer(id[0:1], exp[0:1], zero_eulers[0:1], zero_trans[0:1])
-            _, cano_secc_color = self.secc_renderer(id[0:1]*0, exp[0:1]*0, zero_eulers[0:1], zero_trans[0:1])
-            batch['drv_secc'] = drv_secc_colors.cuda()
-            batch['src_secc'] = src_secc_color.cuda()
-            batch['cano_secc'] = cano_secc_color.cuda()
+        # if inp['debug']:
+        #     with torch.no_grad():
+        #         chunk_size = 50
+        #         drv_secc_color_lst = []
+        #         num_iters = len(id)//chunk_size if len(id)%chunk_size == 0 else len(id)//chunk_size+1
+        #         for i in tqdm.trange(num_iters, desc="rendering secc"):
+        #             torch.cuda.empty_cache()
+        #             face_mask, drv_secc_color = self.secc_renderer(id[i*chunk_size:(i+1)*chunk_size], exp[i*chunk_size:(i+1)*chunk_size], zero_eulers[i*chunk_size:(i+1)*chunk_size], zero_trans[i*chunk_size:(i+1)*chunk_size])
+        #             drv_secc_color_lst.append(drv_secc_color.cpu())
+        #     drv_secc_colors = torch.cat(drv_secc_color_lst, dim=0)
+        #     _, src_secc_color = self.secc_renderer(id[0:1], exp[0:1], zero_eulers[0:1], zero_trans[0:1])
+        #     _, cano_secc_color = self.secc_renderer(id[0:1]*0, exp[0:1]*0, zero_eulers[0:1], zero_trans[0:1])
+        #     batch['drv_secc'] = drv_secc_colors.cuda()
+        #     batch['src_secc'] = src_secc_color.cuda()
+        #     batch['cano_secc'] = cano_secc_color.cuda()
 
         # get idexp_lm3d
         id_ds = torch.from_numpy(self.dataset.ds_dict['id']).float().cuda()
         exp_ds = torch.from_numpy(self.dataset.ds_dict['exp']).float().cuda()
+        
+        # # save id_ds and exp_ds
+        # np.save('emogene/experiment/data/feng_id_ds.npy', self.dataset.ds_dict['id'])
+        # np.save('emogene/experiment/data/feng_exp_ds.npy', self.dataset.ds_dict['exp'])
+        
 
         idexp_lm3d_ds = self.face3d_helper.reconstruct_idexp_lm3d(id_ds, exp_ds)
         idexp_lm3d_mean = idexp_lm3d_ds.mean(dim=0, keepdim=True)
@@ -499,15 +530,25 @@ class GeneFace2Infer:
             
             # ============== bs_ver_modified ==============
             idexp_lm3d = self.face3d_helper.reconstruct_idexp_lm3d(id, exp, bs=emo_lm468, bs_lm_area=inp['bs_lm_area'])
+            idexp_lm3d_geneface = self.face3d_helper.reconstruct_idexp_lm3d(id, exp)
             
             # ============== bs_ver_modified ==============
             
-            if keypoint_mode == 'lm68':
+            if keypoint_mode == 'lm68':              
                 idexp_lm3d = idexp_lm3d[:, index_lm68_from_lm478]
                 idexp_lm3d_mean = idexp_lm3d_mean[:, index_lm68_from_lm478]
                 idexp_lm3d_std = idexp_lm3d_std[:, index_lm68_from_lm478]
                 lower = lower[index_lm68_from_lm478]
                 upper = upper[index_lm68_from_lm478]
+                
+                # # ============== bs_ver_modified ==============
+                idexp_lm3d_geneface = idexp_lm3d_geneface[:, index_lm68_from_lm478]
+                idexp_lm3d_geneface_mean = idexp_lm3d_mean
+                idexp_lm3d_geneface_std = idexp_lm3d_std
+                lower_geneface = lower
+                upper_geneface = upper
+                # # ============== bs_ver_modified ==============
+                
             elif keypoint_mode == 'lm131':
                 idexp_lm3d = idexp_lm3d[:, index_lm131_from_lm478]
                 idexp_lm3d_mean = idexp_lm3d_mean[:, index_lm131_from_lm478]
@@ -520,12 +561,13 @@ class GeneFace2Infer:
                 raise NotImplementedError()
             
             idexp_lm3d = idexp_lm3d.reshape([-1, 68*3])
+            idexp_lm3d_geneface = idexp_lm3d_geneface.reshape([-1, 68*3])
             idexp_lm3d_ds_lle = idexp_lm3d_ds[:, index_lm68_from_lm478].reshape([-1, 68*3])
             # ============== bs_ver_modified ==============
             # feat_fuse, _, _ = compute_LLE_projection(feats=idexp_lm3d[:, :68*3], feat_database=idexp_lm3d_ds_lle[:, :68*3], K=10)
             # feat_fuse, feat_errors, feat_weights = compute_LLE_projection(feats=idexp_lm3d[:, :68*3], feat_database=idexp_lm3d_ds_lle[:, :68*3], K=10)
             feat_fuse, feat_errors, feat_weights = compute_LLE_projection_by_parts(feats=idexp_lm3d, feat_database=idexp_lm3d_ds_lle, K=10)
-            
+            feat_fuse_geneface, feat_errors_geneface, feat_weights_geneface = compute_LLE_projection_by_parts(feats=idexp_lm3d_geneface, feat_database=idexp_lm3d_ds_lle, K=10)
             
             # # print('feat_fuse shape:', feat_fuse.shape)
             
@@ -568,10 +610,19 @@ class GeneFace2Infer:
             idexp_lm3d = idexp_lm3d.reshape([-1, 68, 3])
             idexp_lm3d_normalized = (idexp_lm3d - idexp_lm3d_mean) / idexp_lm3d_std
             # idexp_lm3d_normalized = torch.clamp(idexp_lm3d_normalized, min=lower, max=upper)
+            
+            # # ============== bs_ver_modified ==============
+            idexp_lm3d_geneface[:, :68*3] = LLE_percent * feat_fuse_geneface + (1-LLE_percent) * idexp_lm3d_geneface[:,:68*3]
+            idexp_lm3d_geneface = idexp_lm3d_geneface.reshape([-1, 68, 3])
+            idexp_lm3d_geneface_normalized = (idexp_lm3d_geneface - idexp_lm3d_geneface_mean) / idexp_lm3d_geneface_std
+            # # ============== bs_ver_modified ==============
+            
 
         cano_lm3d = (idexp_lm3d_mean + idexp_lm3d_std * idexp_lm3d_normalized) / 10 + self.face3d_helper.key_mean_shape[index_lm68_from_lm478].unsqueeze(0)
+        cano_lm3d_geneface = (idexp_lm3d_geneface_mean + idexp_lm3d_geneface_std * idexp_lm3d_geneface_normalized) / 10 + self.face3d_helper.key_mean_shape[index_lm68_from_lm478].unsqueeze(0)
         
         eye_area_percent = self.opened_eye_area_percent * torch.ones([len(cano_lm3d), 1], dtype=cano_lm3d.dtype, device=cano_lm3d.device)
+        eye_area_percent_geneface = self.opened_eye_area_percent * torch.ones([len(cano_lm3d_geneface), 1], dtype=cano_lm3d_geneface.dtype, device=cano_lm3d_geneface.device)
         
         if inp['blink_mode'] == 'period':
             cano_lm3d, eye_area_percent = inject_blink_to_lm68(cano_lm3d, self.opened_eye_area_percent, self.closed_eye_area_percent)
@@ -580,9 +631,8 @@ class GeneFace2Infer:
         idexp_lm3d_normalized = ((cano_lm3d - self.face3d_helper.key_mean_shape[index_lm68_from_lm478].unsqueeze(0)) * 10 - idexp_lm3d_mean) / idexp_lm3d_std
         idexp_lm3d_normalized = torch.clamp(idexp_lm3d_normalized, min=lower, max=upper)
         
-        
         batch['cano_lm3d'] = cano_lm3d
-
+        
         assert keypoint_mode == 'lm68'
         idexp_lm3d_normalized_ = idexp_lm3d_normalized[0:1, :].repeat([len(exp),1,1]).clone()
         idexp_lm3d_normalized_[:, 17:27] = idexp_lm3d_normalized[:, 17:27] # brow
@@ -605,6 +655,31 @@ class GeneFace2Infer:
         
         lm68 = lm2d[:, index_lm68_from_lm478, :]
         batch['lm68'] = lm68.reshape([lm68.shape[0], 68*2])
+        
+        
+        # # ============== bs_ver_modified ==============
+        idexp_lm3d_geneface_normalized = ((cano_lm3d_geneface - self.face3d_helper.key_mean_shape[index_lm68_from_lm478].unsqueeze(0)) * 10 - idexp_lm3d_geneface_mean) / idexp_lm3d_geneface_std
+        idexp_lm3d_geneface_normalized = torch.clamp(idexp_lm3d_geneface_normalized, min=lower_geneface, max=upper_geneface)
+        batch['cano_lm3d_geneface'] = cano_lm3d_geneface
+        idexp_lm3d_geneface_normalized_ = idexp_lm3d_geneface_normalized[0:1, :].repeat([len(exp),1,1]).clone()
+        idexp_lm3d_geneface_normalized_[:, 17:27] = idexp_lm3d_geneface_normalized[:, 17:27] # brow
+        idexp_lm3d_geneface_normalized_[:, 36:48] = idexp_lm3d_geneface_normalized[:, 36:48] # eye
+        idexp_lm3d_geneface_normalized_[:, 27:36] = idexp_lm3d_geneface_normalized[:, 27:36] # nose
+        idexp_lm3d_geneface_normalized_[:, 48:68] = idexp_lm3d_geneface_normalized[:, 48:68] # mouth
+        idexp_lm3d_geneface_normalized_[:, 0:17] = idexp_lm3d_geneface_normalized[:, :17] # yaw
+        
+        idexp_lm3d_geneface_normalized = idexp_lm3d_geneface_normalized_
+        cond_win = idexp_lm3d_geneface_normalized.reshape([len(exp), 1, -1])
+        cond_wins_geneface = [get_audio_features(cond_win, att_mode=2, index=idx) for idx in range(len(cond_win))]
+        batch['cond_wins_geneface'] = cond_wins_geneface
+        
+        smo_euler_geneface = smooth_features_xd(batch['euler'])
+        smo_trans_geneface = smooth_features_xd(batch['trans'])
+        
+        lm2d_geneface = self.face3d_helper.reconstruct_lm2d_nerf(id, exp, smo_euler_geneface, smo_trans_geneface)
+        lm68_geneface = lm2d_geneface[:, index_lm68_from_lm478, :]
+        batch['lm68_geneface'] = lm68_geneface.reshape([lm68_geneface.shape[0], 68*2])
+        # # ============== bs_ver_modified ==============
 
         return batch
 
@@ -620,9 +695,16 @@ class GeneFace2Infer:
         poses = batch['poses']
         lm68s = batch['lm68']
         eye_area_percent = batch['eye_area_percent']
+        
 
         pred_rgb_lst = []
-
+        
+        
+        cond_inp_geneface = batch['cond_wins_geneface']
+        lm68s_geneface = batch['lm68_geneface']
+        pred_rgb_lst_geneface = []
+        
+        
         # forward renderer
         if inp['low_memory_usage']:
             # save memory, when one image is rendered, write it into video
@@ -665,12 +747,40 @@ class GeneFace2Infer:
             pred_rgbs = pred_rgbs * 2 - 1 # to -1~1 scale
 
             if inp['debug']:
-                # prepare for output
-                drv_secc_colors = batch['drv_secc']
-                secc_img = torch.cat([torch.nn.functional.interpolate(drv_secc_colors[i:i+1], (512,512)) for i in range(num_frames)]).cpu()
-                cano_lm3d_frame_lst = vis_cano_lm3d_to_imgs(batch['cano_lm3d'], hw=512)
+                # # prepare for output
+                # drv_secc_colors = batch['drv_secc']
+                # secc_img = torch.cat([torch.nn.functional.interpolate(drv_secc_colors[i:i+1], (512,512)) for i in range(num_frames)]).cpu()
+                # cano_lm3d_frame_lst = vis_cano_lm3d_to_imgs(batch['cano_lm3d'], hw=512)
+                # cano_lm3d_frames = convert_to_tensor(np.stack(cano_lm3d_frame_lst)).permute(0, 3, 1, 2) / 127.5 - 1
+                # imgs = torch.cat([pred_rgbs, cano_lm3d_frames, secc_img], dim=3) # [B, C, H, W]
+                # ============== bs_ver_modified ==============
+                
+                # render the geneface version video
+                with torch.cuda.amp.autocast(enabled=True):
+                    # forward neural renderer
+                    for i in tqdm.trange(num_frames, desc="GeneFace++ is rendering... "):
+                        model_out = self.secc2video_model.render(rays_o[i], rays_d[i], cond_inp_geneface[i], bg_coords, poses[i], index=i, staged=False, bg_color=bg_color, lm68=lm68s_geneface[i], perturb=False, force_all_rays=False,
+                                        T_thresh=inp['raymarching_end_threshold'], eye_area_percent=eye_area_percent[i],
+                                        **hparams)
+                        if self.secc2video_hparams.get('with_sr', False):
+                            pred_rgb_geneface = model_out['sr_rgb_map'][0].cpu() # [c, h, w]
+                        else:
+                            pred_rgb_geneface = model_out['rgb_map'][0].reshape([512,512,3]).permute(2,0,1).cpu()
+
+                        pred_rgb_lst_geneface.append(pred_rgb_geneface)
+                pred_rgbs_geneface = torch.stack(pred_rgb_lst_geneface).cpu()
+                pred_rgbs_geneface = pred_rgbs_geneface * 2 - 1 # to -1~1 scale                
+                
+                # process the frames to be rendered
+                cano_lm3d_frame_lst = vis_cano_lm3d_to_imgs(batch['cano_lm3d'], hw=512, color_label='green')
                 cano_lm3d_frames = convert_to_tensor(np.stack(cano_lm3d_frame_lst)).permute(0, 3, 1, 2) / 127.5 - 1
-                imgs = torch.cat([pred_rgbs, cano_lm3d_frames, secc_img], dim=3) # [B, C, H, W]
+                
+                cano_lm3d_frame_lst_geneface = vis_cano_lm3d_to_imgs(batch['cano_lm3d_geneface'], hw=512, color_label='red')
+                cano_lm3d_frames_geneface = convert_to_tensor(np.stack(cano_lm3d_frame_lst_geneface)).permute(0, 3, 1, 2) / 127.5 - 1
+                
+                imgs = torch.cat([pred_rgbs, pred_rgbs_geneface, cano_lm3d_frames, cano_lm3d_frames_geneface], dim=3) # [B, C, H, W]
+                
+                # ============== bs_ver_modified ==============
             else:
                 imgs = pred_rgbs
             imgs = imgs.clamp(-1,1)
