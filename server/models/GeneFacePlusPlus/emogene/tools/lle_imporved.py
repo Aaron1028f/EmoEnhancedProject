@@ -141,6 +141,46 @@ FACIAL_LANDMARK_REGIONS_SIMPLE = {
     'upper_face': list(range(0, 48)) # 包含除了嘴巴以外的所有部分
 }
 
+# 測試，每個區域都分開
+FAICIAL_LANDMARK_REGIONS_TEST = {
+    'mouth': list(range(48, 68)),      # 嘴巴 (20 points)
+    # 'right_eyebrow': list(range(17, 22)), # 右眉毛 (5 points)
+    # 'left_eyebrow': list(range(22, 27)),  # 左眉毛 (5 points)
+    # 'right_eye': list(range(36, 42)),     # 右眼 (6 points)
+    # 'left_eye': list(range(42, 48)),      # 左眼 (6 points)
+    'upper_face': list(range(17, 27)) + list(range(36, 48)), # 包含眉毛和眼睛 (22 points)
+    'nose': list(range(27, 36)),         # 鼻子 (9 points)
+    'jaw': list(range(0, 17))            # 下巴輪廓 (17 points)
+}
+
+from scipy.signal import savgol_filter
+def smooth_features_seq(feats_seq, window_length=5, polyorder=2):
+    """
+    使用 Savitzky-Golay 濾波器平滑特徵的時間序列。
+
+    args:
+        feats_seq: [T, C] 的張量，T 是總幀數，C 是特徵維度。
+        window_length: 濾波器的窗口大小，必須是正奇數。值越大，平滑效果越強。
+        polyorder: 擬合多項式的階數。必須小於 window_length。值越小，平滑效果越強。
+    return:
+        smoothed_feats_seq: [T, C] 平滑後的特徵張量。
+    """
+    # 確保 window_length 是奇數
+    if window_length % 2 == 0:
+        window_length += 1
+        
+    # savgol_filter 需要在 numpy array 上操作
+    feats_seq_np = feats_seq.cpu().numpy()
+    
+    # 沿著時間軸 (axis=0) 進行濾波
+    smoothed_feats_seq_np = savgol_filter(feats_seq_np, window_length, polyorder, axis=0)
+    
+    # 轉回 torch tensor
+    smoothed_feats_seq = torch.from_numpy(smoothed_feats_seq_np).to(feats_seq.device)
+    
+    return smoothed_feats_seq
+
+
 def compute_LLE_projection_by_parts(feats, feat_database, K=10, regions=FACIAL_LANDMARK_REGIONS_SIMPLE):
     """
     對臉部不同區域分別進行 LLE 投影。
@@ -151,14 +191,17 @@ def compute_LLE_projection_by_parts(feats, feat_database, K=10, regions=FACIAL_L
         K: KNN 的鄰居數量
         regions: 一個字典，定義了區域名稱和對應的 68 點索引
     return:
-        final_feat_fuse: [N, 204], 組合後的 LLE 投影結果
+        final_feat_fuse_raw: [N, 204], 組合後的 LLE 投影結果
     """
+    # regions = FAICIAL_LANDMARK_REGIONS_TEST
+    
+    
     if regions is None:
         # 如果未提供區域劃分，則退回原始的整體 LLE
         return compute_LLE_projection(feats, feat_database, K)
 
     N, C = feats.shape
-    final_feat_fuse = torch.zeros_like(feats)
+    final_feat_fuse_raw = torch.zeros_like(feats)
     final_errors = {}
     final_weights = {}
 
@@ -183,11 +226,18 @@ def compute_LLE_projection_by_parts(feats, feat_database, K=10, regions=FACIAL_L
         )
         
         # 將計算結果放回完整特徵的對應位置
-        final_feat_fuse[:, dim_indices] = feat_fuse_part
+        final_feat_fuse_raw[:, dim_indices] = feat_fuse_part
         final_errors[name] = errors_part
         final_weights[name] = weights_part
+    
+    # smooth the final fused features
+    smoothed_feat_fuse = smooth_features_seq(
+        final_feat_fuse_raw, 
+        window_length=9, 
+        polyorder=2
+    )
 
-    return final_feat_fuse, final_errors, final_weights
+    return smoothed_feat_fuse, final_errors, final_weights
 
 # ============== bs_ver_modified ==============
 

@@ -15,6 +15,12 @@ system_prompt = """
 相關資訊提到的問題與回答都是你自己曾經的回答，請使用這些資訊的語氣和風格來回答問題。
 """
 
+# # 參考 RoleCraft-GLM 的 general instruction prompt
+# system_prompt = """
+# 你是
+
+# """
+
 conversation_history = [
     {"role": "system", "content": system_prompt}
 ]
@@ -31,7 +37,13 @@ class LLMResponse(BaseModel):
 @app.post("/generate", response_model=LLMResponse)
 def generate(req: LLMRequest):
     # prompt = req.context + "\nUser: " + req.query
-    prompt = f"使用者的問題：{req.query}\n\n相關上下文：{req.context}\n\n請回答上述問題，並使用生動的舉例和直白的語氣在100個字內回答。"
+    prompt = f"""
+    使用者的問題: {req.query}
+    \n---\n
+    方醫師曾經對於相關問題的: {req.context}
+    \n---\n
+    請回答上述使用者的問題，如果相關資訊與使用者問題非常相似，請直接引用相關資訊的回答。
+    """
     
     conversation_history.append({"role": "user", "content": prompt})
     
@@ -40,7 +52,7 @@ def generate(req: LLMRequest):
         model="gpt-4.1-mini",
         instructions=system_prompt,
         input=conversation_history[-2:],  # use the last 5 turns for context
-        max_output_tokens=50,
+        max_output_tokens=100,
     )
     
     text = response.output_text

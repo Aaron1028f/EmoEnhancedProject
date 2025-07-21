@@ -6,9 +6,8 @@ from scipy.io import loadmat
 
 from deep_3drecon.deep_3drecon_models.bfm import perspective_projection
 
-from emogene.tools.face_landmarker_bs import index_innerlip_from_lm478
-from emogene.tools.face_landmarker_bs import index_outerlip_from_lm478
-
+from emogene.tools.face_landmarker_bs import index_innerlip_from_lm478, index_outerlip_from_lm478
+from emogene.tools.face_landmarker_bs import index_eye_from_lm478, index_eyebrow_from_lm478
 
 class Face3DHelper(nn.Module):
     def __init__(self, bfm_dir='deep_3drecon/BFM', keypoint_mode='lm68', use_gpu=True):
@@ -224,8 +223,11 @@ class Face3DHelper(nn.Module):
             # face = (face) + (bs - mean_face) # geneface full face + emotalk face displacement    
             face = 0.5*(face - mean_face) + bs # delta of geneface + emotalk lm468 full face
         
-        
-        
+        # method 5 (experimental)
+        elif bs is not None and bs_lm_area == 5:
+            gene_index = index_eye_from_lm478 + index_eyebrow_from_lm478
+            bs[:, gene_index, :] = face[:, gene_index, :] # use emotalk eye and eyebrow
+            face = bs # [t, N, 3]
         
         # ============== bs_ver_modified ==============
 
@@ -351,6 +353,19 @@ class Face3DHelper(nn.Module):
             face = face.reshape([face.shape[0], -1, 3]) # [t,N,3]
             face = (0.5*face) + (bs - mean_face) # delta of geneface + delta of emotalk lm468
 
+        # method 5 (experimental, replace eye and eyebrow with geneface, other parts are emotalk lm468)
+        elif bs is not None and bs_lm_area == 5:
+            # replace eye and eyebrow with geneface
+            gene_index = index_eye_from_lm478 + index_eyebrow_from_lm478 # [68,]
+            mean_face = self.key_mean_shape.squeeze().reshape([1, -1]) # [3*N, 1] ==> [1, 3*N]
+            mean_face = mean_face.reshape([1, -1, 3]) # [1, N, 3]
+            bs_delta = bs - mean_face
+            
+            bs_delta = bs_delta.reshape([bs_delta.shape[0], -1, 3]) # [t,N,3]
+            face = face.reshape([face.shape[0], -1, 3]) # [t,N,3]
+            bs_delta[:, gene_index, :] = face[:, gene_index, :]
+            face = bs_delta
+        
         # ============== bs_ver_modified ==============
         
         

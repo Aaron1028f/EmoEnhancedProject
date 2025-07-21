@@ -64,64 +64,65 @@ from modules.radnerfs.radnerf_torso_sr import RADNeRFTorsowithSR
 
 
 face3d_helper = None
-def vis_cano_lm3d_to_imgs(cano_lm3d, hw=512, color_label='red'):
-    # ============== bs_ver_modified ==============
-    color = (255, 0, 0) # default red
-    if color_label == 'red':
-        color = (255, 0, 0)
-    elif color_label == 'green':
-        color = (0, 255, 0)
-    elif color_label == 'blue':
-        color = (0, 0, 255)        
+from emogene.experiment.visualize_2dlandmark.vis_cano_lm_ds import vis_cano_lm3d_to_imgs
+# def vis_cano_lm3d_to_imgs(cano_lm3d, hw=512, color_label='red'):
+#     # ============== bs_ver_modified ==============
+#     color = (255, 0, 0) # default red
+#     if color_label == 'red':
+#         color = (255, 0, 0)
+#     elif color_label == 'green':
+#         color = (0, 255, 0)
+#     elif color_label == 'blue':
+#         color = (0, 0, 255)        
         
-    # load img(.png) background
-    img_bg = load_img_to_512_hwc_array('emogene/experiment/data/may_cano_lm3d_img.png')
-    if img_bg is not None:
-        img_bg = cv2.resize(img_bg, (hw, hw), interpolation=cv2.INTER_LINEAR)
-        img_bg = cv2.cvtColor(img_bg, cv2.COLOR_BGR2RGB)
-        img_bg = img_bg.astype(np.uint8)
-    else:
-        img_bg = np.ones([hw, hw, 3], dtype=np.uint8) * 255
-    # ============== bs_ver_modified ==============
+#     # load img(.png) background
+#     img_bg = load_img_to_512_hwc_array('emogene/experiment/data/may_cano_lm3d_img.png')
+#     if img_bg is not None:
+#         img_bg = cv2.resize(img_bg, (hw, hw), interpolation=cv2.INTER_LINEAR)
+#         img_bg = cv2.cvtColor(img_bg, cv2.COLOR_BGR2RGB)
+#         img_bg = img_bg.astype(np.uint8)
+#     else:
+#         img_bg = np.ones([hw, hw, 3], dtype=np.uint8) * 255
+#     # ============== bs_ver_modified ==============
     
     
-    cano_lm3d_ = cano_lm3d[:1, ].repeat([len(cano_lm3d),1,1])
-    cano_lm3d_[:, 17:27] = cano_lm3d[:, 17:27] # brow
-    cano_lm3d_[:, 36:48] = cano_lm3d[:, 36:48] # eye
-    cano_lm3d_[:, 27:36] = cano_lm3d[:, 27:36] # nose
-    cano_lm3d_[:, 48:68] = cano_lm3d[:, 48:68] # mouth
-    cano_lm3d_[:, 0:17] = cano_lm3d[:, :17] # yaw
+#     cano_lm3d_ = cano_lm3d[:1, ].repeat([len(cano_lm3d),1,1])
+#     cano_lm3d_[:, 17:27] = cano_lm3d[:, 17:27] # brow
+#     cano_lm3d_[:, 36:48] = cano_lm3d[:, 36:48] # eye
+#     cano_lm3d_[:, 27:36] = cano_lm3d[:, 27:36] # nose
+#     cano_lm3d_[:, 48:68] = cano_lm3d[:, 48:68] # mouth
+#     cano_lm3d_[:, 0:17] = cano_lm3d[:, :17] # yaw
     
-    cano_lm3d = cano_lm3d_
+#     cano_lm3d = cano_lm3d_
 
-    cano_lm3d = convert_to_np(cano_lm3d)
+#     cano_lm3d = convert_to_np(cano_lm3d)
 
-    WH = hw
-    cano_lm3d = (cano_lm3d * WH/2 + WH/2).astype(int)
-    frame_lst = []
-    for i_img in range(len(cano_lm3d)):
-        # lm2d = cano_lm3d[i_img ,:, 1:] # [68, 2]
-        lm2d = cano_lm3d[i_img ,:, :2] # [68, 2]
-        # img = np.ones([WH, WH, 3], dtype=np.uint8) * 255
-        img = copy.deepcopy(img_bg)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        # flip back
-        img = cv2.flip(img, 0)
+#     WH = hw
+#     cano_lm3d = (cano_lm3d * WH/2 + WH/2).astype(int)
+#     frame_lst = []
+#     for i_img in range(len(cano_lm3d)):
+#         # lm2d = cano_lm3d[i_img ,:, 1:] # [68, 2]
+#         lm2d = cano_lm3d[i_img ,:, :2] # [68, 2]
+#         # img = np.ones([WH, WH, 3], dtype=np.uint8) * 255
+#         img = copy.deepcopy(img_bg)
+#         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+#         # flip back
+#         img = cv2.flip(img, 0)
         
-        for i in range(len(lm2d)):
-            x, y = lm2d[i]
-            # color = (255,0,0)
-            img = cv2.circle(img, center=(x,y), radius=3, color=color, thickness=-1)
-            font = cv2.FONT_HERSHEY_SIMPLEX
-        img = cv2.flip(img, 0)
-        for i in range(len(lm2d)):
-            x, y = lm2d[i]
-            y = WH - y
-            # img = cv2.putText(img, f"{i}", org=(x,y), fontFace=font, fontScale=0.3, color=(255,0,0))
-            img = cv2.putText(img, f"{i}", org=(x,y), fontFace=font, fontScale=0.3, color=color)
+#         for i in range(len(lm2d)):
+#             x, y = lm2d[i]
+#             # color = (255,0,0)
+#             img = cv2.circle(img, center=(x,y), radius=3, color=color, thickness=-1)
+#             font = cv2.FONT_HERSHEY_SIMPLEX
+#         img = cv2.flip(img, 0)
+#         for i in range(len(lm2d)):
+#             x, y = lm2d[i]
+#             y = WH - y
+#             # img = cv2.putText(img, f"{i}", org=(x,y), fontFace=font, fontScale=0.3, color=(255,0,0))
+#             img = cv2.putText(img, f"{i}", org=(x,y), fontFace=font, fontScale=0.3, color=color)
             
-        frame_lst.append(img)
-    return frame_lst
+#         frame_lst.append(img)
+#     return frame_lst
 
 def inject_blink_to_lm68(lm68, opened_eye_area_percent=0.6, closed_eye_area_percent=0.15):
     # [T, 68, 2]
@@ -497,8 +498,12 @@ class GeneFace2Infer:
             idexp_lm3d_ds_normalized = (idexp_lm3d_ds - idexp_lm3d_mean) / idexp_lm3d_std
         else:
             idexp_lm3d_ds_normalized = idexp_lm3d_ds
-        lower = torch.quantile(idexp_lm3d_ds_normalized, q=0.03, dim=0)
-        upper = torch.quantile(idexp_lm3d_ds_normalized, q=0.97, dim=0)
+        # lower = torch.quantile(idexp_lm3d_ds_normalized, q=0.03, dim=0)
+        # upper = torch.quantile(idexp_lm3d_ds_normalized, q=0.97, dim=0)
+        # ============== bs_ver_modified ==============
+        lower = torch.quantile(idexp_lm3d_ds_normalized, q=0.08, dim=0)
+        upper = torch.quantile(idexp_lm3d_ds_normalized, q=0.92, dim=0)
+        # ============== bs_ver_modified ==============
 
         LLE_percent = inp['lle_percent']
             
@@ -542,6 +547,18 @@ class GeneFace2Infer:
                 upper = upper[index_lm68_from_lm478]
                 
                 # # ============== bs_ver_modified ==============
+                # print('idexp_lm3d_std shape:', idexp_lm3d_std.shape)
+                # print('idexp_lm3d_std:', idexp_lm3d_std)
+                # print('lower shape:', lower.shape)
+                # print('lower:', lower)
+                # print('upper shape:', upper.shape)
+                # print('upper:', upper)
+                # save the idexp_lm3d_std, lower, upper to numpy files
+                # model_person_name = 'Feng'
+                # np.save(f'emogene/experiment/limit/{model_person_name}_idexp_lm3d_std.npy', idexp_lm3d_std.cpu().numpy())
+                # np.save(f'emogene/experiment/limit/{model_person_name}_lower.npy', lower.cpu().numpy())
+                # np.save(f'emogene/experiment/limit/{model_person_name}_upper.npy', upper.cpu().numpy())
+                
                 idexp_lm3d_geneface = idexp_lm3d_geneface[:, index_lm68_from_lm478]
                 idexp_lm3d_geneface_mean = idexp_lm3d_mean
                 idexp_lm3d_geneface_std = idexp_lm3d_std
@@ -630,6 +647,13 @@ class GeneFace2Infer:
         batch['eye_area_percent'] = eye_area_percent
         idexp_lm3d_normalized = ((cano_lm3d - self.face3d_helper.key_mean_shape[index_lm68_from_lm478].unsqueeze(0)) * 10 - idexp_lm3d_mean) / idexp_lm3d_std
         idexp_lm3d_normalized = torch.clamp(idexp_lm3d_normalized, min=lower, max=upper)
+        
+        # =============== bs_ver_modified ==============
+        # visualize the real rendered landmarks
+        cano_lm3d_clamped = (idexp_lm3d_mean + idexp_lm3d_std * idexp_lm3d_normalized) / 10 + self.face3d_helper.key_mean_shape[index_lm68_from_lm478].unsqueeze(0)
+        batch['cano_lm3d_clamped'] = cano_lm3d_clamped
+        
+        # =============== bs_ver_modified ==============
         
         batch['cano_lm3d'] = cano_lm3d
         
@@ -772,7 +796,7 @@ class GeneFace2Infer:
                 pred_rgbs_geneface = pred_rgbs_geneface * 2 - 1 # to -1~1 scale                
                 
                 # process the frames to be rendered
-                cano_lm3d_frame_lst = vis_cano_lm3d_to_imgs(batch['cano_lm3d'], hw=512, color_label='green')
+                cano_lm3d_frame_lst = vis_cano_lm3d_to_imgs(batch['cano_lm3d'], batch['cano_lm3d_clamped'], hw=512, color_label='green')
                 cano_lm3d_frames = convert_to_tensor(np.stack(cano_lm3d_frame_lst)).permute(0, 3, 1, 2) / 127.5 - 1
                 
                 cano_lm3d_frame_lst_geneface = vis_cano_lm3d_to_imgs(batch['cano_lm3d_geneface'], hw=512, color_label='red')

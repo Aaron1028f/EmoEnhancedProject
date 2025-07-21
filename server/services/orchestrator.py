@@ -38,7 +38,7 @@ def generate_pipeline(inp: UserIn):
     # audio_path = t.json()["audio_path"]
     audio_path = tts_service.cosyvoice_tts(answer)
 
-    # return Result(answer=answer, audio_url=audio_path, video_url="only_support_audio_now")
+    return Result(answer=answer, audio_url=audio_path, video_url="only_support_audio_now")
 
 
 
