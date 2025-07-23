@@ -1,13 +1,22 @@
-# pip install yt-dlp youtube-transcript-api pyannote.audio
+# env: pip install yt-dlp youtube-transcript-api pyannote.audio
 
+# make sure you put your Hugging Face access token in .env file
+# HUGGING_FACE_TOKEN=your_token_here
+
+# import modules
 import yt_dlp
 from youtube_transcript_api import YouTubeTranscriptApi
 from pyannote.audio import Pipeline
 import torch
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 # 替換成您的 Hugging Face access token
 # HF_TOKEN = "YOUR_HUGGING_FACE_TOKEN"
-HF_TOKEN = "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"
+HF_TOKEN = os.getenv("HUGGING_FACE_TOKEN")
 
 # 1. 下載音訊
 def download_audio(youtube_url, output_path='audio.wav'):
@@ -59,9 +68,10 @@ if __name__ == '__main__':
 
     # =======================================================================================================
     YOUTUBE_URL_LIST = [
-        'https://www.youtube.com/watch?v=BxExJ3cMAtY', # live EP1
-        'https://www.youtube.com/watch?v=eQqS85aH9lI', # live EP2
-        'https://www.youtube.com/watch?v=eAEBnBENExw', # live EP3
+        # 'https://www.youtube.com/watch?v=BxExJ3cMAtY', # live EP1, for dataset of roleplay
+        # 'https://www.youtube.com/watch?v=eQqS85aH9lI', # live EP2, for dataset of roleplay
+        # 'https://www.youtube.com/watch?v=eAEBnBENExw', # live EP3, for dataset of roleplay
+        'https://www.youtube.com/watch?v=-xFxeotJLnQ', # live EP32, for dataset of GPT-SoVITS model training
     ]
     VIDEO_ID_LIST = [url.split('v=')[-1].split('&')[0] if 'v=' in url else url.split('/')[-1] for url in YOUTUBE_URL_LIST]
     # print(f"處理 YouTube 影片: {YOUTUBE_URL_LIST} (ID: {VIDEO_ID_LIST})")

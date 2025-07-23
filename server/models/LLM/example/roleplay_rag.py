@@ -20,8 +20,8 @@ from langchain_community.vectorstores import FAISS
 
 # =================================================================================================
 # --- 全域設定 ---
-LLM_PROVIDER = "gemini" # this one is free to use, "openai" is also available
-# LLM_PROVIDER = "openai"  # 可選 "openai" 或 "gemini"
+# LLM_PROVIDER = "gemini" # this one is free to use, "openai" is also available
+LLM_PROVIDER = "openai"  # 可選 "openai" 或 "gemini"
 GEMINI_MODEL_NAME = "gemini-2.5-flash"
 # GEMINI_MODEL_NAME = "gemini-2.5-flash-lite-preview-06-17"
 CHATGPT_MODEL_NAME = "gpt-4.1" # "gpt-4.1-mini" is also good for fast response
