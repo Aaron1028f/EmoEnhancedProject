@@ -4,6 +4,13 @@ from numpy.linalg import solve
 
 from utils.commons.tensor_utils import convert_to_tensor
 
+# import filters
+from scipy.signal import savgol_filter
+
+import sys
+sys.path.append('./')
+from emogene.tools.one_euro_filter import OneEuroFilter 
+
 # ========================================
 def find_k_nearest_neighbors_cosine(feats, feat_database, K=10):
     """使用餘弦相似度尋找 KNN"""
@@ -153,8 +160,53 @@ FAICIAL_LANDMARK_REGIONS_TEST = {
     'jaw': list(range(0, 17))            # 下巴輪廓 (17 points)
 }
 
-from scipy.signal import savgol_filter
-def smooth_features_seq(feats_seq, window_length=5, polyorder=2):
+def smooth_features_seq_one_euro(feats_seq, freq=25, min_cutoff=0.4, beta=0.7, d_cutoff=1.0):
+    """
+    使用 One Euro Filter 平滑特徵的時間序列。
+
+    args:
+        feats_seq: [T, C] 的張量，T 是總幀數，C 是特徵維度。
+        freq: 資料的採樣頻率 (Hz)。
+        min_cutoff: 最小截止頻率。值越低，靜止時的平滑效果越強。
+        beta: 截止頻率的變化速度。值越高，對快速運動的反應越靈敏。
+        d_cutoff: 導數的截止頻率，通常保持為 1.0。
+    return:
+        smoothed_feats_seq: [T, C] 平滑後的特徵張量。
+    """
+    # 將輸入張量轉換為 numpy array
+    feats_seq_np = feats_seq.cpu().numpy()
+    T, C = feats_seq_np.shape
+    
+    # 準備用於存放平滑後數據的 array
+    smoothed_feats_seq_np = np.zeros_like(feats_seq_np)
+    
+    # 處理第一幀
+    t0 = 0.0
+    x0 = feats_seq_np[0]
+    smoothed_feats_seq_np[0] = x0
+    
+    # 為每個特徵維度初始化一個 OneEuroFilter
+    # 注意：根據提供的 one_euro_filter.py，初始化需要 t0 和 x0
+    filters = [
+        OneEuroFilter(t0, x0[c], min_cutoff=min_cutoff, beta=beta, d_cutoff=d_cutoff)
+        for c in range(C)
+    ]
+    
+    # 逐幀應用濾波器
+    t_step = 1.0 / freq
+    for t in range(1, T):
+        current_t = t0 + t * t_step
+        current_x = feats_seq_np[t]
+        
+        for c in range(C):
+            smoothed_feats_seq_np[t, c] = filters[c](current_t, current_x[c])
+            
+    # 轉回 torch tensor
+    smoothed_feats_seq = torch.from_numpy(smoothed_feats_seq_np).to(feats_seq.device)
+    
+    return smoothed_feats_seq
+
+def smooth_features_seq_savgol(feats_seq, window_length=5, polyorder=2):
     """
     使用 Savitzky-Golay 濾波器平滑特徵的時間序列。
 
@@ -230,13 +282,22 @@ def compute_LLE_projection_by_parts(feats, feat_database, K=10, regions=FACIAL_L
         final_errors[name] = errors_part
         final_weights[name] = weights_part
     
-    # smooth the final fused features
-    smoothed_feat_fuse = smooth_features_seq(
+    # smooth the final fused features (use savgol_filter, good engough for May, but not good engough for Feng)
+    # smoothed_feat_fuse = smooth_features_seq_savgol(
+    #     final_feat_fuse_raw, 
+    #     window_length=9, 
+    #     polyorder=2
+    # )
+    
+    # use one_euro_filter
+    smoothed_feat_fuse = smooth_features_seq_one_euro(
         final_feat_fuse_raw, 
-        window_length=9, 
-        polyorder=2
+        freq=25, 
+        min_cutoff=0.4, 
+        beta=0.7, 
+        d_cutoff=1.0
     )
-
+    
     return smoothed_feat_fuse, final_errors, final_weights
 
 # ============== bs_ver_modified ==============

@@ -111,9 +111,13 @@ def render_lm468(args):
     # print(f"output_video: {output_video}")
     # print(f"bs52_level: {bs52_level}")
     # print("="*80)
+    import time
+    print("開始渲染 lm468...")
+    start_render_time = time.time()
 
     # cmd = '{} -t 64 -b {} -P {} -- "{}" "{}" '.format(blender_path, blend_path, python_path, args.result_path, wav_name)
-    cmd = f"{blender_path} --background {blend_path} --threads 64 --python {python_path} -- {output_video} {lm468_bs_np_path} {bs52_level} {result_path} {wav_name}"
+    # cmd = f"{blender_path} --background {blend_path} --threads 64 --python {python_path} -- {output_video} {lm468_bs_np_path} {bs52_level} {result_path} {wav_name}"
+    cmd = f"{blender_path} --background {blend_path} --python {python_path} -- {output_video} {lm468_bs_np_path} {bs52_level} {result_path} {wav_name}"
 
     cmd = shlex.split(cmd)
     p = subprocess.Popen(
@@ -128,6 +132,9 @@ def render_lm468(args):
         line = line.strip()
         if line:
             print('[{}]'.format(line))
+            
+    end_render_time = time.time()
+    print("渲染 lm468 完成，耗時: {:.2f} 秒".format(end_render_time - start_render_time))
                         
     if p.returncode == 0:
         print('Subprogram success')
