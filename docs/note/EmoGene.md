@@ -1,5 +1,6 @@
 ### TODO
-- 加入one euro filter
+- 加入one euro filter (已完成)
+- 改善geneface lm3d 和 emotalk lm3d 的疊加方法
 
 
 ### 0725: one euro filter 測試
@@ -17,3 +18,7 @@ pip install oneeurofilter
 - beta (beta): 截止頻率的反應靈敏度。這個參數控制截止頻率隨訊號速度變化的程度。值越高，濾波器在偵測到快速移動時，會更「激進」地提高截止頻率以減少延遲。
 
 - d_cutoff (f_c,d): 導數濾波器的截止頻率。通常保持預設值即可（例如 1.0 Hz）。
+
+### 0726: 動態疊加lm3d方法實驗
+
+

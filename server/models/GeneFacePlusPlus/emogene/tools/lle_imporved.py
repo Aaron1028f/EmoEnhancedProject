@@ -294,7 +294,8 @@ def compute_LLE_projection_by_parts(feats, feat_database, K=10, regions=FACIAL_L
         final_feat_fuse_raw, 
         freq=25, 
         min_cutoff=0.4, 
-        beta=0.7, 
+        # beta=0.7,
+        beta=0.9, 
         d_cutoff=1.0
     )
     

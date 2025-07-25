@@ -234,8 +234,9 @@ def genefacepp_demo(
                             3 means face without the whole mouth.\n
                             4 means using both the displacement of GeneFace and the emotalk lm468.\n
                             5 means using displacement of GeneFace for eye and eyebrow, and emotalk lm468 for the rest.\n
+                            6 means dynamic ratio of GeneFace and emotalk lm468\n
                             """
-                            bs_lm_area = gr.Slider(minimum=0, maximum=5, step=1, label="BS Landmarks Area", value=1, info=bs_lm_area_info_str)
+                            bs_lm_area = gr.Slider(minimum=0, maximum=6, step=1, label="BS Landmarks Area", value=4, info=bs_lm_area_info_str)
 
                             # some emotalk inputs
                             gr.Markdown("### EmoTalk and Other Additional Settings (optional)")
