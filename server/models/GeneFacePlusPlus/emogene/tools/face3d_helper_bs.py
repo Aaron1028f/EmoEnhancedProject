@@ -435,8 +435,8 @@ class Face3DHelper(nn.Module):
             mouth_open_distance_mixed = torch.norm(upper_lip_y_mixed - lower_lip_y_mixed, dim=-1) # [t,]
             # plot
             plt.plot(mouth_open_distance_mixed.cpu().numpy(), color='red', linewidth=1.0)
-            plt.savefig('/home/aaron/project/server/models/GeneFacePlusPlus/emogene/experiment/lip_lm_limit/mouth_open_distance.png')
-            plt.close()
+            # plt.savefig('/home/aaron/project/server/models/GeneFacePlusPlus/emogene/experiment/lip_lm_limit/mouth_open_distance.png')
+            # plt.close()
                     
         # ============== bs_ver_modified ==============
         

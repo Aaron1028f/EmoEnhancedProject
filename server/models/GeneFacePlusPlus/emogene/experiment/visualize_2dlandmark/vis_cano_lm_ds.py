@@ -91,6 +91,8 @@ def vis_cano_lm3d_to_imgs(cano_lm3d, cano_lm3d_clamped=None, hw=512, color_label
             # img = cv2.putText(img, f"{i}", org=(x,y), fontFace=font, fontScale=0.3, color=(255,0,0))
             img = cv2.putText(img, f"{i}", org=(x,y), fontFace=font, fontScale=0.3, color=color)
             
+        # show the frame number on the left top corner
+        img = cv2.putText(img, f"Frame: {i_img+1}/{len(cano_lm3d)}", org=(10, 20), fontFace=font, fontScale=0.5, color=(0, 0, 0), thickness=1)
         frame_lst.append(img)
     return frame_lst
 

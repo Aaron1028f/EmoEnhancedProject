@@ -498,11 +498,11 @@ class GeneFace2Infer:
             idexp_lm3d_ds_normalized = (idexp_lm3d_ds - idexp_lm3d_mean) / idexp_lm3d_std
         else:
             idexp_lm3d_ds_normalized = idexp_lm3d_ds
-        # lower = torch.quantile(idexp_lm3d_ds_normalized, q=0.03, dim=0)
-        # upper = torch.quantile(idexp_lm3d_ds_normalized, q=0.97, dim=0)
+        lower = torch.quantile(idexp_lm3d_ds_normalized, q=0.03, dim=0)
+        upper = torch.quantile(idexp_lm3d_ds_normalized, q=0.97, dim=0)
         # ============== bs_ver_modified ==============
-        lower = torch.quantile(idexp_lm3d_ds_normalized, q=0.08, dim=0)
-        upper = torch.quantile(idexp_lm3d_ds_normalized, q=0.92, dim=0)
+        # lower = torch.quantile(idexp_lm3d_ds_normalized, q=0.08, dim=0)
+        # upper = torch.quantile(idexp_lm3d_ds_normalized, q=0.92, dim=0)
         # ============== bs_ver_modified ==============
 
         LLE_percent = inp['lle_percent']
@@ -620,18 +620,55 @@ class GeneFace2Infer:
             # # for emotalk landmarks, about 6.6
             # # for using geneface inner lips landmarks and other emotalk landmarks, about 7.28
             # # for using geneface mouth and other emotalk landmarks, about 6.69
-            
-            
+            # <experiment>
+            # draw the mouth largest and smallest open distance in the dataset
+            import matplotlib.pyplot as plt
+            # find the largest and smallest mouth open distance in the dataset
+            idexp_lm3d_ds_lle_exp = idexp_lm3d_ds_lle.reshape([-1, 68, 3])
+            face_real_lm_ds_exp = idexp_lm3d_ds_lle_exp/10 + self.face3d_helper.key_mean_shape[index_lm68_from_lm478].squeeze().reshape([1, -1, 3])
+            upper_lip_ds_exp = face_real_lm_ds_exp[:, 62, :]
+            lower_lip_ds_exp = face_real_lm_ds_exp[:, 66, :]
+            mouth_open_distance_ds_exp = torch.norm(upper_lip_ds_exp - lower_lip_ds_exp, dim=-1)
+            # transform the largest number to a tensor and repeat it for the number of frames
+            # the largest
+            print(f'mouth_open_distance_ds_exp max: {mouth_open_distance_ds_exp.max()}')
+            mouth_open_distance_ds_exp_max = torch.tensor(mouth_open_distance_ds_exp.max()).reshape([-1, 1]).repeat([len(idexp_lm3d), 1])
+            # the smallest
+            print(f'mouth_open_distance_ds_exp min: {mouth_open_distance_ds_exp.min()}')
+            mouth_open_distance_ds_exp_min = torch.tensor(mouth_open_distance_ds_exp.min()).reshape([-1, 1]).repeat([len(idexp_lm3d), 1])
+            plt.plot(mouth_open_distance_ds_exp_max.cpu().numpy(), color='yellow', linewidth=1.0, label='max')
+            plt.plot(mouth_open_distance_ds_exp_min.cpu().numpy(), color='yellow', linewidth=1.0, label='min')
+            # </experiment>
+
             # ============== bs_ver_modified ==============
             
             idexp_lm3d[:, :68*3] = LLE_percent * feat_fuse + (1-LLE_percent) * idexp_lm3d[:,:68*3]
             idexp_lm3d = idexp_lm3d.reshape([-1, 68, 3])
+            # <experiment>
+            # import matplotlib.pyplot as plt
+            mean_face_exp = self.face3d_helper.key_mean_shape[index_lm68_from_lm478].squeeze().reshape([1, -1, 3])
+            face_real_lm_exp = idexp_lm3d/10 + mean_face_exp
+            upper_lip_exp = face_real_lm_exp[:, 62, :]
+            lower_lip_exp = face_real_lm_exp[:, 66, :]
+            mouth_open_distance_exp = torch.norm(upper_lip_exp - lower_lip_exp, dim=-1)
+            plt.plot(mouth_open_distance_exp.cpu().numpy(), color='green', linewidth=1.0)   
+            # </experiment>   
             idexp_lm3d_normalized = (idexp_lm3d - idexp_lm3d_mean) / idexp_lm3d_std
-            # idexp_lm3d_normalized = torch.clamp(idexp_lm3d_normalized, min=lower, max=upper)
+            idexp_lm3d_normalized = torch.clamp(idexp_lm3d_normalized, min=lower, max=upper)
             
             # # ============== bs_ver_modified ==============
             idexp_lm3d_geneface[:, :68*3] = LLE_percent * feat_fuse_geneface + (1-LLE_percent) * idexp_lm3d_geneface[:,:68*3]
             idexp_lm3d_geneface = idexp_lm3d_geneface.reshape([-1, 68, 3])
+            # <experiment>
+            face_real_lm_geneface_exp = idexp_lm3d_geneface/10 + mean_face_exp
+            upper_lip_geneface_exp = face_real_lm_geneface_exp[:, 62, :]
+            lower_lip_geneface_exp = face_real_lm_geneface_exp[:, 66, :]
+            mouth_open_distance_geneface_exp = torch.norm(upper_lip_geneface_exp - lower_lip_geneface_exp, dim=-1)
+            plt.plot(mouth_open_distance_geneface_exp.cpu().numpy(), color='black', linewidth=1.0)
+            plt.savefig('/home/aaron/project/server/models/GeneFacePlusPlus/emogene/experiment/lip_lm_limit/mouth_open_distance.png', dpi=300, bbox_inches='tight')
+            plt.close()     
+            # </experiment>              
+            
             idexp_lm3d_geneface_normalized = (idexp_lm3d_geneface - idexp_lm3d_geneface_mean) / idexp_lm3d_geneface_std
             # # ============== bs_ver_modified ==============
             
