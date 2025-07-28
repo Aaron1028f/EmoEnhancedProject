@@ -22,3 +22,7 @@ pip install oneeurofilter
 ### 0726: 動態疊加lm3d方法實驗
 
 
+### 0729
+
+使用method 6: 穩定May
+使用method 7: 穩定方醫師(已有微笑和生氣的表情)，但會有部分偽影問題，待解決

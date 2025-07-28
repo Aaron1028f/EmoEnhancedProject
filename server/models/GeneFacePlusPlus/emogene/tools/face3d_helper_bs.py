@@ -6,7 +6,7 @@ from scipy.io import loadmat
 
 from deep_3drecon.deep_3drecon_models.bfm import perspective_projection
 
-from emogene.tools.face_landmarker_bs import index_innerlip_from_lm478, index_outerlip_from_lm478
+from emogene.tools.face_landmarker_bs import index_innerlip_from_lm478, index_outerlip_from_lm478, index_mouth_from_lm478
 from emogene.tools.face_landmarker_bs import index_eye_from_lm478, index_eyebrow_from_lm478
 
 class Face3DHelper(nn.Module):
@@ -237,7 +237,20 @@ class Face3DHelper(nn.Module):
             lips_index = index_innerlip_from_lm478 + index_outerlip_from_lm478
             bs[:, lips_index, :] = face[:, lips_index, :]
             face = 1* (face - mean_face) + 1 * bs
-        
+        # method 7
+        elif bs is not None and bs_lm_area == 7:
+            mean_face = mean_face.reshape([1, -1, 3]) # [1, N, 3]
+            gene_displacement = face - mean_face
+            emo_displacement = bs - mean_face
+            
+            face_mixed_displacement = gene_displacement
+            
+            face_mixed_displacement[:, index_mouth_from_lm478, :] = gene_displacement[:, index_mouth_from_lm478,:] + emo_displacement[:, index_mouth_from_lm478,:]
+            face_mixed_displacement[:, index_eye_from_lm478, :] = emo_displacement[:, index_eye_from_lm478,:]
+            face_mixed_displacement[:, index_eyebrow_from_lm478, :] = emo_displacement[:, index_eyebrow_from_lm478,:]
+            
+            face = mean_face + face_mixed_displacement # [t, N, 3]
+            
         # ============== bs_ver_modified ==============
 
         # re-centering the face with mean_xyz, so the face will be in [-1, 1]
@@ -388,59 +401,27 @@ class Face3DHelper(nn.Module):
             
             from emogene.experiment.lm_displacement_limit.check_lm_limit import mouth_open_distance_before_lle
             mouth_open_distance_before_lle(face, bs_delta, mean_face)
-            
-            # # calculate the distance between the center of upper inner lip and lower inner lip (using geneface landmark)
-            # face_real_lm = face + mean_face # [t, N, 3]
-            # # center of upper inner lip(13 in lm468)
-            # upper_lip_y = face_real_lm[:, 13, :]
-            # # center of lower inner lip(14 in lm468)
-            # lower_lip_y = face_real_lm[:, 14, :]
-            # # calculate the distance
-            # mouth_open_distance = torch.norm(upper_lip_y - lower_lip_y, dim=-1) # [t,]
-            # print('mouth_open_distance shape', mouth_open_distance.shape) # [t,]
-            # print('mouth_open_distance mean', mouth_open_distance.mean()) # [t,]
-            # print('mouth_open_distance max', mouth_open_distance.max()) # [t,]
-            # print('mouth_open_distance min', mouth_open_distance.min()) # [t,]
-            # print('mouth_open_distance std', mouth_open_distance.std()) # [t,]
-            # print('mouth_open_distance min 5%', mouth_open_distance.quantile(0.05)) # find the min 5%
-            # print('mouth_open_distance min 10%', mouth_open_distance.quantile(0.1)) # find the min 10%
-            # print('mouth_open_distance', mouth_open_distance) # [t,]
-            
-            # # plot the mouth_open_distance with matplotlib
-            # import matplotlib.pyplot as plt
-            # plt.plot(mouth_open_distance.cpu().numpy(), color='blue', linewidth=1.0)
-            # plt.title('Mouth Open Distance')
-            # plt.xlabel('Frame')
-            # plt.ylabel('Distance')
-            # plt.grid()
-            # # plt.show()
-            
-            # sigmoid function to determine the weight of geneface and emotalk lm468
-            # k = 20
-            # threshold = mouth_open_distance.quantile(0.1) # find the min 10% as threshold
-            # alpha = torch.sigmoid(k * (mouth_open_distance - threshold)) # [t,]
-            # print('alpha shape', alpha.shape) # [t,]
-            
-            # if the distance is smaller than a threshold, use geneface landmark, otherwise use 0.5*geneface + 1*emotalk
-            
 
-            # final mixed lip landmark
-            
-            # final mixed face landmark (no lips)
-            
             # temp easy setting
             face = (1 * face) + (1 * bs_delta) # [t, N, 3]
             
-            # # test
-            # face_real_lm_mixed = face + mean_face
-            # upper_lip_y_mixed = face_real_lm_mixed[:, 13, :]
-            # lower_lip_y_mixed = face_real_lm_mixed[:, 14, :]
-            # mouth_open_distance_mixed = torch.norm(upper_lip_y_mixed - lower_lip_y_mixed, dim=-1) # [t,]
-            # # plot
-            # plt.plot(mouth_open_distance_mixed.cpu().numpy(), color='red', linewidth=1.0)
-            # # plt.savefig('/home/aaron/project/server/models/GeneFacePlusPlus/emogene/experiment/lip_lm_limit/mouth_open_distance.png')
-            # # plt.close()
-                    
+        # method 7 (method 6, but use geneface eye for Feng)
+        elif bs is not None and bs_lm_area == 7:
+            gene_index = index_eye_from_lm478
+            mean_face = self.key_mean_shape.squeeze().reshape([1, -1]) # [3*N, 1] ==> [1, 3*N]
+            mean_face = mean_face.reshape([1, -1, 3]) # [1, N, 3]
+            bs_delta = bs - mean_face
+            
+            bs_delta = bs_delta.reshape([bs_delta.shape[0], -1, 3]) # [t,N,3]
+            face = face.reshape([face.shape[0], -1, 3]) # [t,N,3]
+            bs_delta[:, gene_index, :] = face[:, gene_index, :] # use geneface eye
+            
+            face_mixed = face # for all other parts, use geneface landamrk displacement
+            face_mixed[:, index_mouth_from_lm478, :] = face[:, index_mouth_from_lm478, :] + bs_delta[:, index_mouth_from_lm478, :] # just for mouth
+            face_mixed[:, index_eye_from_lm478, :] = bs_delta[:, index_eye_from_lm478, :] # just for eye
+            face_mixed[:, index_eyebrow_from_lm478, :] = bs_delta[:, index_eyebrow_from_lm478, :] # just for eyebrow
+
+            face = face_mixed
         # ============== bs_ver_modified ==============
         
         

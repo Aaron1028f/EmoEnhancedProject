@@ -23,18 +23,59 @@ def analyze_lm_displacement_limit(idexp_lm3d_ds_lle, idexp_lm3d, idexp_lm3d_gene
     # =============================================================================================
     # eyebrow displacement part
     eyebrow_displacement(idexp_lm3d_ds_lle, idexp_lm3d, idexp_lm3d_geneface, mean_face_exp)
-    
+    # =============================================================================================
     # eye openness part
-    eye_open_distance()
+    eye_open_distance(idexp_lm3d_ds_lle, idexp_lm3d, idexp_lm3d_geneface, mean_face_exp)
+    # =============================================================================================
     
-def eye_open_distance():
+    
+def eye_open_distance(idexp_lm3d_ds_lle, idexp_lm3d, idexp_lm3d_geneface, mean_face_exp):
     """
     Analyze the eye open distance limit for GeneFace++.
     This function is used to check the limits of eye openness in the GeneFace++ model.
     """
+    RIGHT_EYE_UPPER_CENTER_INDEX = 38
+    RIGHT_EYE_LOWER_CENTER_INDEX = 40
+    # draw the mouth largest and smallest open distance in the dataset
+    idexp_lm3d_ds_lle_exp = idexp_lm3d_ds_lle.reshape([-1, 68, 3])
+    face_real_lm_ds_exp = idexp_lm3d_ds_lle_exp/10 + mean_face_exp
+    upper_eye_ds_exp = face_real_lm_ds_exp[:, RIGHT_EYE_UPPER_CENTER_INDEX, :]
+    lower_eye_ds_exp = face_real_lm_ds_exp[:, RIGHT_EYE_LOWER_CENTER_INDEX, :]
+    eye_open_distance_ds_exp = torch.norm(upper_eye_ds_exp - lower_eye_ds_exp, dim=-1)
+    # transform the largest number to a tensor and repeat it for the number of frames
+    # the largest
+    # print(f'eye_open_distance_ds_exp max: {eye_open_distance_ds_exp.max()}')
+    eye_open_distance_ds_exp_max = torch.tensor(eye_open_distance_ds_exp.max()).reshape([-1, 1]).repeat([len(idexp_lm3d), 1])
+    # the smallest
+    # print(f'eye_open_distance_ds_exp min: {eye_open_distance_ds_exp.min()}')
+    eye_open_distance_ds_exp_min = torch.tensor(eye_open_distance_ds_exp.min()).reshape([-1, 1]).repeat([len(idexp_lm3d), 1])
+    plt.plot(eye_open_distance_ds_exp_max.cpu().numpy(), color='yellow', linewidth=1.0, label='Max in dataset')
+    plt.plot(eye_open_distance_ds_exp_min.cpu().numpy(), color='yellow', linewidth=1.0, label='min in dataset')
+
+    # draw the eye open distance in the mixed Emogene model
+    face_real_lm_exp = idexp_lm3d/10 + mean_face_exp
+    upper_eye_exp = face_real_lm_exp[:, RIGHT_EYE_UPPER_CENTER_INDEX, :]
+    lower_eye_exp = face_real_lm_exp[:, RIGHT_EYE_LOWER_CENTER_INDEX, :]
+    eye_open_distance_exp = torch.norm(upper_eye_exp - lower_eye_exp, dim=-1)
+    plt.plot(eye_open_distance_exp.cpu().numpy(), color='green', linewidth=1.0, label='final Emogene')
+
+    # draw the eye open distance in the original GeneFace++ model
+    face_real_lm_geneface_exp = idexp_lm3d_geneface/10 + mean_face_exp
+    upper_eye_geneface_exp = face_real_lm_geneface_exp[:, RIGHT_EYE_UPPER_CENTER_INDEX, :]
+    lower_eye_geneface_exp = face_real_lm_geneface_exp[:, RIGHT_EYE_LOWER_CENTER_INDEX, :]
+    eye_open_distance_geneface_exp = torch.norm(upper_eye_geneface_exp - lower_eye_geneface_exp, dim=-1)
+    plt.plot(eye_open_distance_geneface_exp.cpu().numpy(), color='black', linewidth=1.0, label='final GeneFace++')
     
-    
-    
+    # save the plot for eye open distance
+    plt.title('Eye Open Distance')
+    plt.xlabel('Frame')
+    plt.ylabel('Distance')
+    plt.grid()
+    plt.legend()
+    plt.savefig('/home/aaron/project/server/models/GeneFacePlusPlus/emogene/experiment/lip_lm_limit/eye_open_distance.png', dpi=300, bbox_inches='tight')
+    plt.close()
+
+
 def eyebrow_displacement(idexp_lm3d_ds_lle, idexp_lm3d, idexp_lm3d_geneface, mean_face_exp):
     """
     Analyze the eyebrow displacement limit for GeneFace++.
@@ -76,9 +117,9 @@ def eyebrow_displacement(idexp_lm3d_ds_lle, idexp_lm3d, idexp_lm3d_geneface, mea
     idexp_lm3d_exp = idexp_lm3d / 10
     right_eyebrow_displacement_emogene = torch.zeros(idexp_lm3d_exp.shape[0])
     emogene_eyebrow_displacement = torch.norm(idexp_lm3d_exp[:, LM68_RIGHT_EYEBROW_INDEX, :], dim=-1)
-    print(f'emogene_eyebrow_displacement shape: {emogene_eyebrow_displacement.shape}')  # [t]
-    print(f'idexp_lm3d_exp shape: {idexp_lm3d_exp.shape}')  # torch.Size([t,N, 3]
-    print(f'right_eyebrow_displacement_emogene shape: {right_eyebrow_displacement_emogene.shape}')  # torch.Size([t, 3])
+    # print(f'emogene_eyebrow_displacement shape: {emogene_eyebrow_displacement.shape}')  # [t]
+    # print(f'idexp_lm3d_exp shape: {idexp_lm3d_exp.shape}')  # torch.Size([t,N, 3]
+    # print(f'right_eyebrow_displacement_emogene shape: {right_eyebrow_displacement_emogene.shape}')  # torch.Size([t, 3])
     for i in range(idexp_lm3d_exp.shape[0]):
         if idexp_lm3d_exp[i, LM68_RIGHT_EYEBROW_INDEX, 2] > 0:
             right_eyebrow_displacement_emogene[i] = emogene_eyebrow_displacement[i]
@@ -90,7 +131,7 @@ def eyebrow_displacement(idexp_lm3d_ds_lle, idexp_lm3d, idexp_lm3d_geneface, mea
     idexp_lm3d_geneface_exp = idexp_lm3d_geneface / 10
     right_eyebrow_displacement_geneface = torch.zeros(idexp_lm3d_geneface_exp.shape[0])
     geneface_eyebrow_displacement = torch.norm(idexp_lm3d_geneface_exp[:, LM68_RIGHT_EYEBROW_INDEX, :], dim=-1)
-    print(f'geneface_eyebrow_displacement shape: {geneface_eyebrow_displacement.shape}')  # [t]
+    # print(f'geneface_eyebrow_displacement shape: {geneface_eyebrow_displacement.shape}')  # [t]
     for i in range(idexp_lm3d_geneface_exp.shape[0]):
         if idexp_lm3d_geneface_exp[i, LM68_RIGHT_EYEBROW_INDEX, 2] > 0:
             right_eyebrow_displacement_geneface[i] = geneface_eyebrow_displacement[i]
@@ -142,10 +183,10 @@ def mouth_open_distance_after_lle(idexp_lm3d_ds_lle, idexp_lm3d, idexp_lm3d_gene
     mouth_open_distance_ds_exp = torch.norm(upper_lip_ds_exp - lower_lip_ds_exp, dim=-1)
     # transform the largest number to a tensor and repeat it for the number of frames
     # the largest
-    print(f'mouth_open_distance_ds_exp max: {mouth_open_distance_ds_exp.max()}')
+    # print(f'mouth_open_distance_ds_exp max: {mouth_open_distance_ds_exp.max()}')
     mouth_open_distance_ds_exp_max = torch.tensor(mouth_open_distance_ds_exp.max()).reshape([-1, 1]).repeat([len(idexp_lm3d), 1])
     # the smallest
-    print(f'mouth_open_distance_ds_exp min: {mouth_open_distance_ds_exp.min()}')
+    # print(f'mouth_open_distance_ds_exp min: {mouth_open_distance_ds_exp.min()}')
     mouth_open_distance_ds_exp_min = torch.tensor(mouth_open_distance_ds_exp.min()).reshape([-1, 1]).repeat([len(idexp_lm3d), 1])
     plt.plot(mouth_open_distance_ds_exp_max.cpu().numpy(), color='yellow', linewidth=1.0, label='Max in dataset')
     plt.plot(mouth_open_distance_ds_exp_min.cpu().numpy(), color='yellow', linewidth=1.0, label='min in dataset')

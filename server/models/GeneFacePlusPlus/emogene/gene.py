@@ -583,9 +583,11 @@ class GeneFace2Infer:
             # ============== bs_ver_modified ==============
             # feat_fuse, _, _ = compute_LLE_projection(feats=idexp_lm3d[:, :68*3], feat_database=idexp_lm3d_ds_lle[:, :68*3], K=10)
             # feat_fuse, feat_errors, feat_weights = compute_LLE_projection(feats=idexp_lm3d[:, :68*3], feat_database=idexp_lm3d_ds_lle[:, :68*3], K=10)
-            feat_fuse, feat_errors, feat_weights = compute_LLE_projection_by_parts(feats=idexp_lm3d, feat_database=idexp_lm3d_ds_lle, K=10)
             # feat_fuse_geneface, feat_errors_geneface, feat_weights_geneface = compute_LLE_projection_by_parts(feats=idexp_lm3d_geneface, feat_database=idexp_lm3d_ds_lle, K=10)
             feat_fuse_geneface, feat_errors_geneface, feat_weights_geneface = compute_LLE_projection(feats=idexp_lm3d_geneface, feat_database=idexp_lm3d_ds_lle, K=10)
+            
+            feat_fuse, feat_errors, feat_weights = compute_LLE_projection_by_parts(feats=idexp_lm3d, feat_database=idexp_lm3d_ds_lle, K=10)
+            
             
             # # print('feat_fuse shape:', feat_fuse.shape)
             
