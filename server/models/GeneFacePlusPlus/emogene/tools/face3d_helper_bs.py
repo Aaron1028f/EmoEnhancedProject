@@ -7,7 +7,9 @@ from scipy.io import loadmat
 from deep_3drecon.deep_3drecon_models.bfm import perspective_projection
 
 from emogene.tools.face_landmarker_bs import index_innerlip_from_lm478, index_outerlip_from_lm478, index_mouth_from_lm478
-from emogene.tools.face_landmarker_bs import index_eye_from_lm478, index_eyebrow_from_lm478
+from emogene.tools.face_landmarker_bs import index_eye_from_lm478, index_eyebrow_from_lm478, index_jaw_from_lm478
+
+from emogene.tools.face_landmarker_bs import index_lm68_from_lm478
 
 class Face3DHelper(nn.Module):
     def __init__(self, bfm_dir='deep_3drecon/BFM', keypoint_mode='lm68', use_gpu=True):
@@ -153,6 +155,62 @@ class Face3DHelper(nn.Module):
         if to_camera:
             lm3d[...,-1] = 10 - lm3d[...,-1] 
         return lm3d
+    # =================== bs_ver_modified =================
+    def reconstruct_lm2d_nerf_from_lm3d(self, id_coeff, exp_coeff, idexp_lm3d, euler, trans):
+        lm2d = self.reconstruct_lm2d_from_lm3d(id_coeff, exp_coeff, idexp_lm3d, euler, trans, to_camera=False)
+        lm2d[..., 0] = 1 - lm2d[..., 0]
+        lm2d[..., 1] = 1 - lm2d[..., 1]
+        return lm2d
+
+    def reconstruct_lm2d_from_lm3d(self, id_coeff, exp_coeff, idexp_lm3d, euler, trans, to_camera=True):
+        """
+        Generate 2D landmark from 3D landmark with keypoint base!
+        lm3d: Tensor[T, N, 3]
+        euler: Tensor[T, 3]
+        """
+        is_btc_flag = True if id_coeff.ndim == 3 else False
+        if is_btc_flag:
+            b,t,_ = id_coeff.shape
+            id_coeff = id_coeff.reshape([b*t,-1])
+            exp_coeff = exp_coeff.reshape([b*t,-1])
+            euler = euler.reshape([b*t,-1])
+            trans = trans.reshape([b*t,-1])
+        id_coeff = id_coeff.to(self.key_id_base.device)
+        exp_coeff = exp_coeff.to(self.key_id_base.device)
+        mean_face = self.key_mean_shape.squeeze().reshape([1, -1]) # [3*68, 1] ==> [1, 3*68]
+        id_base, exp_base = self.key_id_base, self.key_exp_base # [3*68, C]
+        identity_diff_face = torch.matmul(id_coeff, id_base.transpose(0,1)) # [t,c],[c,3*68] ==> [t,3*68]
+        expression_diff_face = torch.matmul(exp_coeff, exp_base.transpose(0,1)) # [t,c],[c,3*68] ==> [t,3*68]
+        
+        face = mean_face + identity_diff_face + expression_diff_face # [t,3N]
+        face = face.reshape([face.shape[0], -1, 3]) # [t,N,3]
+        # ===================
+        idexp_lm3d = idexp_lm3d / 10 # [t, 68, 3]
+        
+        mean_face = mean_face.reshape([1, -1, 3]) # [1, N, 3]
+        mean_face_68 = mean_face[:, index_lm68_from_lm478, :]
+        face_68 = mean_face_68 + idexp_lm3d # [t, 68, 3]
+        
+        face[:, index_lm68_from_lm478, :] = face_68 # [t, N, 3]
+        
+        # re-centering the face with mean_xyz, so the face will be in [-1, 1]
+        rot = self.compute_rotation(euler)
+        # transform
+        lm3d = face @ rot + trans.unsqueeze(1) # [t, N, 3]
+        # to camera
+        if to_camera:
+            lm3d[...,-1] = 10 - lm3d[...,-1] 
+        # to image_plane
+        lm3d = lm3d @ self.persc_proj
+        lm2d = lm3d[..., :2] / lm3d[..., 2:]
+        # flip
+        lm2d[..., 1] = 224 - lm2d[..., 1]
+        lm2d /= 224
+        # if is_btc_flag:
+        #     return lm2d.reshape([b,t,-1,2])
+        return lm2d
+    # ==================== bs_ver_modified =================
+    
 
     def reconstruct_lm2d_nerf(self, id_coeff, exp_coeff, euler, trans, bs=None, bs_lm_area=1):
         lm2d = self.reconstruct_lm2d(id_coeff, exp_coeff, euler, trans, to_camera=False, bs=bs, bs_lm_area=bs_lm_area)
@@ -248,9 +306,41 @@ class Face3DHelper(nn.Module):
             face_mixed_displacement[:, index_mouth_from_lm478, :] = gene_displacement[:, index_mouth_from_lm478,:] + emo_displacement[:, index_mouth_from_lm478,:]
             face_mixed_displacement[:, index_eye_from_lm478, :] = emo_displacement[:, index_eye_from_lm478,:]
             face_mixed_displacement[:, index_eyebrow_from_lm478, :] = emo_displacement[:, index_eyebrow_from_lm478,:]
-            
+
+            face_mixed_displacement[:, index_jaw_from_lm478, :] = gene_displacement[:, index_jaw_from_lm478, :] + 0.5*emo_displacement[:, index_jaw_from_lm478,:]
+
             face = mean_face + face_mixed_displacement # [t, N, 3]
+        # method 8
+        elif bs is not None and bs_lm_area == 8:
+            mean_face = mean_face.reshape([1, -1, 3]) # [1, N, 3]
+            gene_displacement = face - mean_face
+            emo_displacement = bs - mean_face
             
+            face_mixed_displacement = gene_displacement
+            
+            face_mixed_displacement[:, index_mouth_from_lm478, :] = gene_displacement[:, index_mouth_from_lm478,:] + emo_displacement[:, index_mouth_from_lm478,:]
+            face_mixed_displacement[:, index_jaw_from_lm478, :] = emo_displacement[:, index_jaw_from_lm478,:]
+            
+            face_mixed_displacement[:, index_eye_from_lm478, :] = emo_displacement[:, index_eye_from_lm478,:]
+            face_mixed_displacement[:, index_eyebrow_from_lm478, :] = emo_displacement[:, index_eyebrow_from_lm478,:]
+
+            face = mean_face + face_mixed_displacement # [t, N, 3]
+        # method 9 (For Feng)
+        elif bs is not None and bs_lm_area == 9:
+            mean_face = mean_face.reshape([1, -1, 3]) # [1, N, 3]
+            gene_displacement = face - mean_face
+            emo_displacement = bs - mean_face
+            
+            face_mixed_displacement = gene_displacement
+            
+            face_mixed_displacement[:, index_mouth_from_lm478, :] = gene_displacement[:, index_mouth_from_lm478,:] + emo_displacement[:, index_mouth_from_lm478,:]
+            face_mixed_displacement[:, index_jaw_from_lm478, :] = 0.5*gene_displacement[:, index_jaw_from_lm478,:]
+            
+            face_mixed_displacement[:, index_eye_from_lm478, :] = emo_displacement[:, index_eye_from_lm478,:]
+            face_mixed_displacement[:, index_eyebrow_from_lm478, :] = emo_displacement[:, index_eyebrow_from_lm478,:]
+
+            face = mean_face + face_mixed_displacement # [t, N, 3]            
+    
         # ============== bs_ver_modified ==============
 
         # re-centering the face with mean_xyz, so the face will be in [-1, 1]
@@ -420,8 +510,50 @@ class Face3DHelper(nn.Module):
             face_mixed[:, index_mouth_from_lm478, :] = face[:, index_mouth_from_lm478, :] + bs_delta[:, index_mouth_from_lm478, :] # just for mouth
             face_mixed[:, index_eye_from_lm478, :] = bs_delta[:, index_eye_from_lm478, :] # just for eye
             face_mixed[:, index_eyebrow_from_lm478, :] = bs_delta[:, index_eyebrow_from_lm478, :] # just for eyebrow
+            face_mixed[:, index_jaw_from_lm478, :] = face[:, index_jaw_from_lm478, :] + 0.5*bs_delta[:, index_jaw_from_lm478, :] # just for jaw
 
             face = face_mixed
+        # method 8
+        elif bs is not None and bs_lm_area == 8:
+            gene_index = index_eye_from_lm478
+            mean_face = self.key_mean_shape.squeeze().reshape([1, -1]) # [3*N, 1] ==> [1, 3*N]
+            mean_face = mean_face.reshape([1, -1, 3]) # [1, N, 3]
+            bs_delta = bs - mean_face
+            
+            bs_delta = bs_delta.reshape([bs_delta.shape[0], -1, 3]) # [t,N,3]
+            face = face.reshape([face.shape[0], -1, 3]) # [t,N,3]
+            bs_delta[:, gene_index, :] = face[:, gene_index, :] # use geneface eye
+            
+            face_mixed = face # for all other parts, use geneface landamrk displacement
+            face_mixed[:, index_mouth_from_lm478, :] = face[:, index_mouth_from_lm478, :] + bs_delta[:, index_mouth_from_lm478, :] # just for mouth
+            face_mixed[:, index_jaw_from_lm478, :] = bs_delta[:, index_jaw_from_lm478, :] # just for jaw
+
+            face_mixed[:, index_eye_from_lm478, :] = bs_delta[:, index_eye_from_lm478, :] # just for eye
+            face_mixed[:, index_eyebrow_from_lm478, :] = bs_delta[:, index_eyebrow_from_lm478, :] # just for eyebrow
+            
+            face = face_mixed
+            
+        # method 9 (Feng's method)s
+        elif bs is not None and bs_lm_area == 9:
+            gene_index = index_eye_from_lm478
+            mean_face = self.key_mean_shape.squeeze().reshape([1, -1]) # [3*N, 1] ==> [1, 3*N]
+            mean_face = mean_face.reshape([1, -1, 3]) # [1, N, 3]
+            bs_delta = bs - mean_face
+            
+            bs_delta = bs_delta.reshape([bs_delta.shape[0], -1, 3]) # [t,N,3]
+            face = face.reshape([face.shape[0], -1, 3]) # [t,N,3]
+            bs_delta[:, gene_index, :] = face[:, gene_index, :] # use geneface eye
+            
+            face_mixed = face # for all other parts, use geneface landamrk displacement
+            face_mixed[:, index_mouth_from_lm478, :] = face[:, index_mouth_from_lm478, :] + bs_delta[:, index_mouth_from_lm478, :] # just for mouth
+            face_mixed[:, index_jaw_from_lm478, :] = 0.5*face[:, index_jaw_from_lm478, :] # just for jaw
+
+            face_mixed[:, index_eye_from_lm478, :] = bs_delta[:, index_eye_from_lm478, :] # just for eye
+            face_mixed[:, index_eyebrow_from_lm478, :] = bs_delta[:, index_eyebrow_from_lm478, :] # just for eyebrow
+            
+            face = face_mixed            
+            
+
         # ============== bs_ver_modified ==============
         
         

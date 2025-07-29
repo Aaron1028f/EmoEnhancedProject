@@ -684,7 +684,12 @@ class GeneFace2Infer:
         smo_euler = smooth_features_xd(batch['euler'])
         smo_trans = smooth_features_xd(batch['trans'])
         # lm2d = self.face3d_helper.reconstruct_lm2d_nerf(id, exp, smo_euler, smo_trans)
-        lm2d = self.face3d_helper.reconstruct_lm2d_nerf(id, exp, smo_euler, smo_trans, bs=emo_lm468, bs_lm_area=inp['bs_lm_area'])
+        # lm2d = self.face3d_helper.reconstruct_lm2d_nerf(id, exp, smo_euler, smo_trans, bs=emo_lm468, bs_lm_area=inp['bs_lm_area'])
+        
+        # <experiment>
+        # lm2d = self.face3d_helper.reconstruct_lm2d_nerf(id, exp, smo_euler, smo_trans, bs=emo_lm468, bs_lm_area=inp['bs_lm_area'])
+        lm2d = self.face3d_helper.reconstruct_lm2d_nerf_from_lm3d(id, exp, idexp_lm3d, smo_euler, smo_trans)
+        # </experiment>
         
         lm68 = lm2d[:, index_lm68_from_lm478, :]
         batch['lm68'] = lm68.reshape([lm68.shape[0], 68*2])

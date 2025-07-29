@@ -237,7 +237,7 @@ def genefacepp_demo(
                             6 means dynamic ratio of GeneFace and emotalk lm468\n
                             7 means 6, but just use GeneFace eye landmarks.\n
                             """
-                            bs_lm_area = gr.Slider(minimum=0, maximum=7, step=1, label="BS Landmarks Area", value=4, info=bs_lm_area_info_str)
+                            bs_lm_area = gr.Slider(minimum=0, maximum=9, step=1, label="BS Landmarks Area", value=4, info=bs_lm_area_info_str)
 
                             # some emotalk inputs
                             gr.Markdown("### EmoTalk and Other Additional Settings (optional)")
