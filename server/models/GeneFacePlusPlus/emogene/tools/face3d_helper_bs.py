@@ -506,6 +506,11 @@ class Face3DHelper(nn.Module):
             face = face.reshape([face.shape[0], -1, 3]) # [t,N,3]
             bs_delta[:, gene_index, :] = face[:, gene_index, :] # use geneface eye
             
+            # <experiment> check mouth open distance before LLE
+            from emogene.experiment.lm_displacement_limit.check_lm_limit import mouth_open_distance_before_lle
+            mouth_open_distance_before_lle(face, bs_delta, mean_face)
+            # </experiment>            
+            
             face_mixed = face # for all other parts, use geneface landamrk displacement
             face_mixed[:, index_mouth_from_lm478, :] = face[:, index_mouth_from_lm478, :] + bs_delta[:, index_mouth_from_lm478, :] # just for mouth
             face_mixed[:, index_eye_from_lm478, :] = bs_delta[:, index_eye_from_lm478, :] # just for eye
@@ -523,17 +528,22 @@ class Face3DHelper(nn.Module):
             bs_delta = bs_delta.reshape([bs_delta.shape[0], -1, 3]) # [t,N,3]
             face = face.reshape([face.shape[0], -1, 3]) # [t,N,3]
             bs_delta[:, gene_index, :] = face[:, gene_index, :] # use geneface eye
+                        
+            # <experiment> check mouth open distance before LLE
+            from emogene.experiment.lm_displacement_limit.check_lm_limit import mouth_open_distance_before_lle
+            mouth_open_distance_before_lle(face, bs_delta, mean_face)
+            # </experiment>              
             
             face_mixed = face # for all other parts, use geneface landamrk displacement
             face_mixed[:, index_mouth_from_lm478, :] = face[:, index_mouth_from_lm478, :] + bs_delta[:, index_mouth_from_lm478, :] # just for mouth
             face_mixed[:, index_jaw_from_lm478, :] = bs_delta[:, index_jaw_from_lm478, :] # just for jaw
 
             face_mixed[:, index_eye_from_lm478, :] = bs_delta[:, index_eye_from_lm478, :] # just for eye
-            face_mixed[:, index_eyebrow_from_lm478, :] = bs_delta[:, index_eyebrow_from_lm478, :] # just for eyebrow
+            face_mixed[:, index_eyebrow_from_lm478, :] = bs_delta[:, index_eyebrow_from_lm478, :] # just for eyebrow         
             
             face = face_mixed
-            
-        # method 9 (Feng's method)s
+
+        # method 9 (Feng's method)
         elif bs is not None and bs_lm_area == 9:
             gene_index = index_eye_from_lm478
             mean_face = self.key_mean_shape.squeeze().reshape([1, -1]) # [3*N, 1] ==> [1, 3*N]
@@ -543,6 +553,11 @@ class Face3DHelper(nn.Module):
             bs_delta = bs_delta.reshape([bs_delta.shape[0], -1, 3]) # [t,N,3]
             face = face.reshape([face.shape[0], -1, 3]) # [t,N,3]
             bs_delta[:, gene_index, :] = face[:, gene_index, :] # use geneface eye
+            
+            # <experiment> check mouth open distance before LLE
+            from emogene.experiment.lm_displacement_limit.check_lm_limit import mouth_open_distance_before_lle
+            mouth_open_distance_before_lle(face, bs_delta, mean_face)
+            # </experiment>            
             
             face_mixed = face # for all other parts, use geneface landamrk displacement
             face_mixed[:, index_mouth_from_lm478, :] = face[:, index_mouth_from_lm478, :] + bs_delta[:, index_mouth_from_lm478, :] # just for mouth

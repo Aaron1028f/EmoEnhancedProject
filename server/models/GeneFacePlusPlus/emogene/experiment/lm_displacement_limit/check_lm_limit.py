@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from emogene.tools.face_landmarker_bs import index_lm68_from_lm478, index_lm131_from_lm478
+from emogene.tools.face_landmarker_bs import index_lm68_from_lm478
 
 def analyze_lm_displacement_limit(idexp_lm3d_ds_lle, idexp_lm3d, idexp_lm3d_geneface, mean_face_exp):
     """
@@ -204,3 +204,5 @@ def mouth_open_distance_after_lle(idexp_lm3d_ds_lle, idexp_lm3d, idexp_lm3d_gene
     lower_lip_geneface_exp = face_real_lm_geneface_exp[:, 66, :]
     mouth_open_distance_geneface_exp = torch.norm(upper_lip_geneface_exp - lower_lip_geneface_exp, dim=-1)
     plt.plot(mouth_open_distance_geneface_exp.cpu().numpy(), color='black', linewidth=1.0, label='final GeneFace++')
+
+

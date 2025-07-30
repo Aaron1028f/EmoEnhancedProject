@@ -233,7 +233,7 @@ def smooth_features_seq_savgol(feats_seq, window_length=5, polyorder=2):
     return smoothed_feats_seq
 
 
-def compute_LLE_projection_by_parts(feats, feat_database, K=10, regions=FACIAL_LANDMARK_REGIONS_SIMPLE):
+def compute_LLE_projection_by_parts(feats, feat_database, K=10, gene_feat=None, regions=FACIAL_LANDMARK_REGIONS_SIMPLE):
     """
     對臉部不同區域分別進行 LLE 投影。
     
@@ -288,6 +288,25 @@ def compute_LLE_projection_by_parts(feats, feat_database, K=10, regions=FACIAL_L
     #     window_length=9, 
     #     polyorder=2
     # )
+    
+    # <experiment>
+    # testing using geneface feat when geneface mouth is small (not open)
+    if gene_feat is not None:
+        from emogene.tools.mouth_openness_calculation import calculate_mouth_openness, calculate_mouth_openness_dynamic
+        # small_mouth_frames = calculate_mouth_openness(gene_feat)
+        small_mouth_frames = calculate_mouth_openness_dynamic(gene_feat)
+
+
+        # substitute the small mouth frames with the original gene_feat
+        gene_feat_T683 = gene_feat.reshape([-1, 68, 3])  # [T, 68, 3]
+        final_feat_fuse_raw_T683 = final_feat_fuse_raw.reshape([-1, 68, 3])  # [T, 68, 3]
+        final_feat_fuse_raw_T683[small_mouth_frames, 48:68, :] = gene_feat_T683[small_mouth_frames, 48:68, :]
+        final_feat_fuse_raw = final_feat_fuse_raw_T683.reshape([-1, 204])
+        # print(f"Substituted {len(small_mouth_frames)} frames with gene_feat where mouth is small.")
+        # print(f"The substituted frames are: {small_mouth_frames.tolist()}")
+    # </experiment>
+    
+    
     
     # use one_euro_filter
     smoothed_feat_fuse = smooth_features_seq_one_euro(
