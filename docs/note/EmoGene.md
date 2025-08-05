@@ -39,7 +39,12 @@ other parts: use geneface
 
 best combination
 
-Feng: method 9 (通過減少下顎的變化量，解決偽影問題)
-May: method 8 (極少出現偽影問題)(也可以使用9，穩定脖子以下的部分，但會增加臉部出現模糊的機率)
+Feng: 
+- method(BS Landmarks Area) 9 (通過減少下顎的變化量，解決偽影問題)
+- bs52 level: 1~1.5
+
+May: 
+- method(BS Landmarks Area) 8 (極少出現偽影問題)(也可以使用9，穩定脖子以下的部分，但會增加臉部出現模糊的機率)
+- bs52 level: 2
 
 other problem: 不知為何，使用calm時嘴唇會模糊

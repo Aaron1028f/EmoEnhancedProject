@@ -289,36 +289,102 @@ def compute_LLE_projection_by_parts(feats, feat_database, K=10, gene_feat=None, 
     #     polyorder=2
     # )
     
+    # # <experiment>
+    # # testing using geneface feat when geneface mouth is small (not open)
+    # if gene_feat is not None:
+    #     from emogene.tools.mouth_openness_calculation import calculate_mouth_openness, calculate_mouth_openness_dynamic
+    #     # small_mouth_frames = calculate_mouth_openness(gene_feat)
+    #     small_mouth_frames = calculate_mouth_openness_dynamic(gene_feat)
+
+
+    #     # substitute the small mouth frames with the original gene_feat
+    #     gene_feat_T683 = gene_feat.reshape([-1, 68, 3])  # [T, 68, 3]
+    #     final_feat_fuse_raw_T683 = final_feat_fuse_raw.reshape([-1, 68, 3])  # [T, 68, 3]
+    #     final_feat_fuse_raw_T683[small_mouth_frames, 48:68, :] = gene_feat_T683[small_mouth_frames, 48:68, :]
+    #     final_feat_fuse_raw = final_feat_fuse_raw_T683.reshape([-1, 204])
+    #     # print(f"Substituted {len(small_mouth_frames)} frames with gene_feat where mouth is small.")
+    #     # print(f"The substituted frames are: {small_mouth_frames.tolist()}")
+    # # </experiment>
+    
     # <experiment>
-    # testing using geneface feat when geneface mouth is small (not open)
     if gene_feat is not None:
-        from emogene.tools.mouth_openness_calculation import calculate_mouth_openness, calculate_mouth_openness_dynamic
-        # small_mouth_frames = calculate_mouth_openness(gene_feat)
-        small_mouth_frames = calculate_mouth_openness_dynamic(gene_feat)
-
-
-        # substitute the small mouth frames with the original gene_feat
-        gene_feat_T683 = gene_feat.reshape([-1, 68, 3])  # [T, 68, 3]
-        final_feat_fuse_raw_T683 = final_feat_fuse_raw.reshape([-1, 68, 3])  # [T, 68, 3]
-        final_feat_fuse_raw_T683[small_mouth_frames, 48:68, :] = gene_feat_T683[small_mouth_frames, 48:68, :]
-        final_feat_fuse_raw = final_feat_fuse_raw_T683.reshape([-1, 204])
-        # print(f"Substituted {len(small_mouth_frames)} frames with gene_feat where mouth is small.")
-        # print(f"The substituted frames are: {small_mouth_frames.tolist()}")
+        final_feat_fuse_raw = apply_smooth_blending_for_closure(
+            final_feat_fuse_raw, gene_feat, window_size=5
+        )
     # </experiment>
-    
-    
     
     # use one_euro_filter
     smoothed_feat_fuse = smooth_features_seq_one_euro(
         final_feat_fuse_raw, 
         freq=25, 
-        min_cutoff=0.4, 
-        # beta=0.7,
-        beta=0.9, 
+        min_cutoff=0.6, # (last setting is 0.4)
+        # beta=0.7, (default)
+        beta=1.2, # (last setting is 0.9)
         d_cutoff=1.0
     )
     
     return smoothed_feat_fuse, final_errors, final_weights
+
+def apply_smooth_blending_for_closure(emogene_feat, gene_feat, window_size=2):
+    """
+    在需要閉嘴的幀周圍，將 Emogene 特徵平滑地混合到 GeneFace++ 特徵。
+
+    Args:
+        emogene_feat (torch.Tensor): [T, 204], 經過 LLE 處理的 Emogene 特徵。
+        gene_feat (torch.Tensor): [T, 204], 原始的 GeneFace++ 特徵。
+        window_size (int): 在目標幀前後進行混合的幀數。
+
+    Returns:
+        torch.Tensor: [T, 204], 經過平滑混合處理後的特徵。
+    """
+    from emogene.tools.mouth_openness_calculation import calculate_mouth_openness_dynamic
+    
+    # 1. 找出需要強制閉嘴的核心幀
+    target_frames = calculate_mouth_openness_dynamic(gene_feat)
+    if len(target_frames) == 0:
+        return emogene_feat
+
+    # 2. 準備數據
+    blended_feat = emogene_feat.clone()
+    emogene_feat_T683 = emogene_feat.reshape([-1, 68, 3])
+    gene_feat_T683 = gene_feat.reshape([-1, 68, 3])
+    blended_feat_T683 = blended_feat.reshape([-1, 68, 3])
+
+    # 3. 創建混合權重 (例如，線性漸變)
+    # 權重為1時，完全使用 gene_feat
+    # weights = torch.linspace(0, 1, steps=window_size + 1)
+    
+    # 3. 創建混合權重 (使用非線性權重，例如平方)
+    # 這會讓權重在接近1時變化更劇烈，形成更明確的閉合
+    weights = torch.linspace(0, 1, steps=window_size + 1)**2    
+
+    # 4. 對每個目標幀應用混合窗口
+    for frame_idx in target_frames:
+        # 處理中心幀 (100% gene_feat)
+        blended_feat_T683[frame_idx, 48:68, :] = gene_feat_T683[frame_idx, 48:68, :]
+
+        # 向前後擴展混合區域
+        for i in range(1, window_size + 1):
+            # --- 向前混合 (漸出) ---
+            prev_idx = frame_idx - i
+            if prev_idx >= 0:
+                # 權重從1向0遞減
+                w = weights[-i-1] 
+                blended_feat_T683[prev_idx, 48:68, :] = \
+                    (1 - w) * emogene_feat_T683[prev_idx, 48:68, :] + \
+                    w * gene_feat_T683[prev_idx, 48:68, :]
+
+            # --- 向後混合 (漸入) ---
+            next_idx = frame_idx + i
+            if next_idx < len(emogene_feat):
+                # 權重從1向0遞減
+                w = weights[-i-1]
+                blended_feat_T683[next_idx, 48:68, :] = \
+                    (1 - w) * emogene_feat_T683[next_idx, 48:68, :] + \
+                    w * gene_feat_T683[next_idx, 48:68, :]
+
+    return blended_feat_T683.reshape([-1, 204])
+
 
 # ============== bs_ver_modified ==============
 
