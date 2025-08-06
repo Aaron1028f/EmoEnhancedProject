@@ -7,7 +7,7 @@ from emogene.tools.face_landmarker_bs import index_lm68_from_lm478
 face3d_helper = Face3DHelper(keypoint_mode='mediapipe', use_gpu=True)
 mean_face = face3d_helper.key_mean_shape[index_lm68_from_lm478].squeeze().reshape([1, -1, 3]) # [1, 68, 3]
 
-def calculate_mouth_openness(lm3d):
+def calculate_mouth_openness(lm3d, return_distance_only=False):
     """
     This is just simple solution.
     Return a list of frames which have mouth openness less than MOUTH_OPEN_THRESHOLD.
@@ -17,10 +17,16 @@ def calculate_mouth_openness(lm3d):
     MOUTH_OPEN_THRESHOLD = 0.04  # threshold for mouth openness
     
     lm3d = lm3d.reshape([-1, 68, 3])  # [T, 68, 3]
+
     face_real_lm = lm3d/10 + mean_face # [T, 68, 3]
+    # mean_face_tensor = torch.from_numpy(mean_face).to(lm3d.device)
+    # face_real_lm = lm3d/10 + mean_face_tensor # [T, 68, 3]
     upper_lip = face_real_lm[:, 62, :]  # [T, 3]
     lower_lip = face_real_lm[:, 66, :]  # [T, 3]
     mouth_openness = torch.norm(upper_lip - lower_lip, dim=-1)  # [T]
+    
+    if return_distance_only:
+        return mouth_openness
     
     # print frames of mouth openness less than MOUTH_OPEN_THRESHOLD
     print('-' * 50)

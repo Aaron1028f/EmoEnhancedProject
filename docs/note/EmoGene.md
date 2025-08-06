@@ -9,7 +9,8 @@ https://github.com/jaantollander/OneEuroFilter
 
 ```bash
 # pip install one-euro-filter
-pip install oneeurofilter
+# pip install oneeurofilter
+source: https://github.com/jaantollander/OneEuroFilter
 ```
 主要參數：
 
