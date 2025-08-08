@@ -49,3 +49,14 @@ May:
 - bs52 level: 2
 
 other problem: 不知為何，使用calm時嘴唇會模糊
+
+
+### 0809: evaluation method
+
+for evaluation using emotion classification model
+```bash
+pip install pyfeat
+pip install deepface #  
+```
+
+
