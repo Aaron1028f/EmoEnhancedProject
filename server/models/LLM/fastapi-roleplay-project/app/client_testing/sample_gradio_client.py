@@ -146,15 +146,14 @@ with gr.Blocks(theme=theme, css=custom_css, title="RAG 聊天機器人測試介�
         scale=7,
     )
 
-    # 聊天邏輯處理
+    # 【已修正】聊天邏輯處理，採用官方推薦的 gr.update() 模式
     async def handle_chat_submission(message, chat_history, session_id_val, mode_val):
         if not message:
-            # 【已修正】在生成器中，使用不帶值的 return 來結束函式
             return
 
         # 步驟 1: 立即顯示使用者訊息和一個等待中的位置
         chat_history.append((message, None))
-        yield "", chat_history
+        yield gr.update(value=""), gr.update(value=chat_history.copy())
 
         # 步驟 2: 呼叫後端並串流或獲取回應
         if mode_val == "WebSocket (串流)":
@@ -162,12 +161,14 @@ with gr.Blocks(theme=theme, css=custom_css, title="RAG 聊天機器人測試介�
             async for partial_response in generator:
                 # 持續更新機器人回應的位置
                 chat_history[-1] = (message, partial_response)
-                yield "", chat_history
+                # 【修正】每次都 yield 一個新的列表副本，並使用 gr.update() 強制 Gradio 更新 UI
+                yield gr.update(value=""), gr.update(value=chat_history.copy())
         else:
             # 標準模式一次性更新
             response = await rest_chat_predict(message, chat_history, session_id_val)
             chat_history[-1] = (message, response)
-            yield "", chat_history
+            # 【修正】這裡也使用 gr.update() 來確保更新
+            yield gr.update(value=""), gr.update(value=chat_history.copy())
 
     # 將元件連接到處理函式
     chat_msg = chat_input.submit(
@@ -176,6 +177,7 @@ with gr.Blocks(theme=theme, css=custom_css, title="RAG 聊天機器人測試介�
         [chat_input, chatbot],
         queue=True
     )
+    # 當串流結束後，重新啟用輸入框
     chat_msg.then(lambda: gr.update(interactive=True), None, [chat_input], queue=False)
 
     # 清除按鈕

@@ -24,7 +24,7 @@ from langchain_community.vectorstores import FAISS
 LLM_PROVIDER = "openai"  # 可選 "openai" 或 "gemini"
 GEMINI_MODEL_NAME = "gemini-2.5-flash"
 # GEMINI_MODEL_NAME = "gemini-2.5-flash-lite-preview-06-17"
-CHATGPT_MODEL_NAME = "gpt-4.1" # "gpt-4.1-mini" is also good for fast response
+CHATGPT_MODEL_NAME = "gpt-4.1" # "gpt-4.1-mini" is also good for fast response"gpt-5-nano"
 
 FAISS_INDEX_PATH = "faiss_index_qa_openai"
 JSON_DATA_PATH = "QAdata.json"
@@ -138,7 +138,7 @@ def get_llm_and_embeddings(provider="openai"):
         print("🤖 使用 OpenAI 模型...")
         if not os.getenv("OPENAI_API_KEY"):
             raise ValueError("錯誤：找不到 OPENAI_API_KEY。請在 .env 檔案中設定。")
-        llm = ChatOpenAI(model=CHATGPT_MODEL_NAME, temperature=0.7, max_tokens=1024, streaming=True)
+        llm = ChatOpenAI(model=CHATGPT_MODEL_NAME, temperature=1, max_tokens=1024, streaming=True)
         embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
     elif provider == "gemini":
         print("✨ 使用 Google Gemini 模型...")
