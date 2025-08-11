@@ -1,0 +1,266 @@
+<!-- ```
+
+---
+
+#### 第三步：建立前端網頁 (`index.html`)
+
+這個檔案可以放在任何地方，甚至您的本機電腦上。為了方便，您可以將它也放在 `realtime` 目錄下。
+
+````html
+filepath: /home/aaron/project/server/models/GeneFacePlusPlus/emogene/realtime/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmoGene Streaming Client</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        .container { max-width: 800px; margin: auto; }
+        .player-container { border: 1px solid #ccc; margin-top: 1em; }
+        #status { margin-top: 1em; padding: 1em; background-color: #f0f0f0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>EmoGene Streaming Client</h1>
+        
+        <form id="upload-form">
+            <h3>1. 選擇音訊檔案</h3>
+            <input type="file" id="audio-file" name="audio_file" required>
+            
+            <h3>2. 設定參數 (可擴充)</h3>
+            <label for="mouth_amp">Mouth Amplitude:</label>
+            <input type="range" id="mouth_amp" name="mouth_amp" min="0" max="1" step="0.05" value="0.4">
+            <br><br>
+            
+            <button type="submit">Generate Stream</button>
+
+            <!-- [新增] 測試按鈕 -->
+            <button type="button" id="test-button" style="margin-left: 10px;">Test Inference</button>
+
+
+        </form>
+
+        <div id="status">等待開始...</div>
+
+        <h3>播放器</h3>
+        <div class="player-container">
+            <video id="video-player" controls style="width: 100%; height: auto;"></video>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('upload-form');
+        const statusDiv = document.getElementById('status');
+        const videoPlayer = document.getElementById('video-player');
+
+        const testButton = document.getElementById('test-button'); // [新增]
+        const audioFileInput = document.getElementById('audio-file'); // [新增]
+
+        const API_URL_STREAM = '/start_stream'; // [修改] 變數名稱以區分
+        const API_URL_TEST = '/test_inference'; // [新增] 測試 API 的 URL
+
+
+        // HLS.js 播放器設定函數
+        window.setupHlsPlayer = (streamKey) => {
+            if (!streamKey) {
+                console.error("Received an empty streamKey.");
+                statusDiv.textContent = "錯誤：未收到有效的串流密鑰。";
+                return;
+            }
+            
+            // 注意：這裡的 hostname 是 Nginx 伺服器的地址，端口是 8080
+            // const hlsUrl = `http://${window.location.hostname}:8080/hls/${streamKey}.m3u8`;
+            // statusDiv.innerHTML = `串流已開始！<br>正在嘗試從 ${hlsUrl} 載入影片...`;
+            // console.log('Setting up HLS player for URL:', hlsUrl);
+            // 注意：這裡的 hostname 是 Nginx 伺服器的地址，端口是 8080
+            // [修改] 為了更穩健，我們直接使用當前頁面的主機名
+            // const hlsUrl = `http://${window.location.hostname}:8080/hls/${streamKey}.m3u8`;
+            // [修改] 將 localhost 硬編碼為 127.0.0.1 來強制使用 IPv4
+            //const hlsUrl = `http://127.0.0.1:8080/hls/${streamKey}.m3u8`;
+            const hlsUrl = `http://127.0.0.1:11842/hls/${streamKey}.m3u8`;
+            
+            statusDiv.innerHTML = `串流已開始！<br>正在嘗試從 ${hlsUrl} 載入影片...`;
+            console.log('Setting up HLS player for URL:', hlsUrl);
+
+
+
+            if (Hls.isSupported()) {
+                // print some msg
+                console.log('HLS is supported.');
+
+                const hls = new Hls({
+                    // [維持] 這些是基本的重試設定
+                    manifestLoadingMaxRetry: 15,     // 增加到 15 次
+                    manifestLoadingRetryDelay: 1000, // 每次重試之間間隔 1 秒
+                    manifestLoadingTimeOut: 15000,   // 15 秒後超時
+
+                    // [新增] 這是解決問題的關鍵設定
+                    // 告訴 HLS.js，即使遇到 404 錯誤，也將其視為可恢復的錯誤並繼續重試
+                    // 這對於等待後端生成檔案的場景至關重要
+                    maxBufferLength: 30, // seconds
+                    maxMaxBufferLength: 600, // seconds
+                    liveSyncDurationCount: 3,
+                    liveMaxLatencyDurationCount: Infinity,
+                    liveDurationInfinity: true,
+                    highBufferWatchdogPeriod: 2,
+                    
+                    // 覆寫預設的錯誤處理邏輯
+                    retryOnNetworkError: true,
+                    networkRetryDelay: 1000,
+                });
+                
+                // 延遲一點再載入，確保 Nginx 已經建立好檔案
+                //setTimeout(() => {
+                  //  hls.loadSource(hlsUrl);
+                    //hls.attachMedia(videoPlayer);
+                    //hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                      //  videoPlayer.play().catch(e => console.error("Autoplay was prevented:", e));
+                    //});
+                    //hls.on(Hls.Events.ERROR, function (event, data) {
+                      //  if (data.fatal) {
+                        //    console.error('Fatal HLS error:', data);
+                          //  statusDiv.textContent = `播放器錯誤: ${data.details}. 請檢查 Nginx 伺服器是否正常，以及端口 8080 是否可訪問。`;
+                        //}
+                    //});
+                //}, 2000); // 延遲 2 秒
+                // [修改] 直接載入，讓 HLS.js 自己處理重試
+                hls.loadSource(hlsUrl);
+                hls.attachMedia(videoPlayer);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    statusDiv.textContent = "播放列表載入成功，正在播放！";
+                    videoPlayer.play().catch(e => console.error("Autoplay was prevented:", e));
+                });
+
+                hls.on(Hls.Events.ERROR, function (event, data) {
+                    if (data.fatal) {
+                        console.error('Fatal HLS error:', data);
+                        // [修改] 提供更精確的錯誤訊息
+                        statusDiv.textContent = `播放器錯誤: ${data.details} (status ${data.response?.code}). 請檢查後端伺服器日誌，確認 FFmpeg 是否成功推流。`;
+                    }
+                });
+
+
+            } else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                videoPlayer.src = hlsUrl;
+                console.log('HLS is supported by the browser, using native playback.');
+            } else {
+                console.log('HLS is not supported in this browser.');
+            }
+
+        };
+
+        // 表單提交事件
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            statusDiv.textContent = '正在上傳檔案並請求伺服器開始串流...';
+
+            const formData = new FormData(form);
+
+            // try {
+                //const response = await fetch(API_URL, {
+                    //method: 'POST',
+                  //  body: formData,
+                //});
+            try {
+                // 步驟 1: 呼叫 /start_stream 取得 stream_key
+                const response = await fetch(API_URL_STREAM, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `伺服器錯誤: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const streamKey = data.stream_key;
+                const audioPath = data.audio_path;
+                statusDiv.textContent = `串流密鑰已取得: ${streamKey}。正在連接 WebSocket...`;
+
+                // 步驟 2: 連接到 WebSocket
+                // 注意: 如果 FastAPI 運行在 HTTPS 上，這裡要用 wss://
+                const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${wsProtocol}//${window.location.host}/ws/${streamKey}`;
+                const socket = new WebSocket(wsUrl);
+
+                socket.onopen = () => {
+                    statusDiv.textContent = 'WebSocket 已連接。正在發送參數並開始後端處理...';
+                    // 步驟 3: 發送參數給後端，觸發推流
+                    const params = {
+                        audio_path: audioPath,
+                        blink_mode: document.getElementById('mouth_amp').value,
+                        temperature: 0.0, // 您可以從表單中獲取更多參數
+                        mouth_amp: parseFloat(document.getElementById('mouth_amp').value)
+                    };
+                    socket.send(JSON.stringify(params));
+                };
+
+                // 步驟 4: 監聽來自後端的訊息
+                socket.onmessage = (event) => {
+                    const message = JSON.parse(event.data);
+                    if (message.status === 'ready') {
+                        statusDiv.textContent = '後端準備就緒！正在啟動播放器...';
+                        // 步驟 5: 收到「準備就緒」信號後，才啟動播放器
+                        setupHlsPlayer(message.stream_key);
+                    } else if (message.status === 'error') {
+                        statusDiv.textContent = `後端錯誤: ${message.message}`;
+                    }
+                };
+
+                socket.onclose = () => {
+                    statusDiv.textContent = 'WebSocket 連線已關閉。';
+                };
+
+                socket.onerror = (error) => {
+                    console.error('WebSocket Error:', error);
+                    statusDiv.textContent = 'WebSocket 連線錯誤。';
+                };
+
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.textContent = `請求失敗: ${error.message}`;
+            }
+        });
+        // [新增] 測試按鈕點擊事件
+        testButton.addEventListener('click', async () => {
+            if (!audioFileInput.files || audioFileInput.files.length === 0) {
+                statusDiv.textContent = '請先選擇一個音訊檔案！';
+                return;
+            }
+
+            statusDiv.textContent = '正在上傳檔案並執行測試推論...';
+            
+            const formData = new FormData();
+            formData.append('audio_file', audioFileInput.files[0]);
+
+            try {
+                const response = await fetch(API_URL_TEST, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || `伺服器錯誤: ${response.status}`);
+                }
+                
+                statusDiv.textContent = `測試成功: ${data.message}`;
+                console.log('Test Response:', data);
+
+            } catch (error) {
+                console.error('Test Error:', error);
+                statusDiv.textContent = `測試失敗: ${error.message}`;
+            }
+        });
+
+
+
+    </script>
+</body>
+</html>

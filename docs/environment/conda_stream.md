@@ -142,3 +142,35 @@ ps aux | grep nginx
 /home/aaron/nginx/sbin/nginx -s stop
 
 ```
+
+
+## other status check
+```bash
+# 啟動前，先測試設定檔語法是否正確
+/home/aaron/nginx/sbin/nginx -t
+
+
+# 檢查 Nginx 行程是否存在
+ps aux | grep nginx
+
+# 檢查端口是否被監聽 (不需要 sudo)
+# 如果沒有輸出，代表 Nginx 未成功啟動或監聽端口
+ss -tlnp | grep nginx
+
+# 或者針對特定端口檢查
+lsof -i :8080
+lsof -i :19350
+
+# 查看所有正在監聽的port
+lsof -i -P | grep LISTEN
+
+
+# 【重要】如果啟動失敗，請查看錯誤日誌
+tail -f /home/aaron/nginx/logs/error.log
+
+```
+
+```bash
+# 持續監控 HLS 目錄下的檔案變化
+watch ls -l /home/aaron/nginx/hls_data/hls/
+```

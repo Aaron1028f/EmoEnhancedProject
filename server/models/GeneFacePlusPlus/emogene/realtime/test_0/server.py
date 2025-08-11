@@ -1,20 +1,23 @@
 import os, sys
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../..'))) # Add project root to path
 sys.path.append('./')
 
 import argparse
 import uuid
 import traceback
 import subprocess
-from fastapi import FastAPI, File, UploadFile, Form, BackgroundTasks, WebSocket, WebSocketDisconnect
+# from fastapi import FastAPI, File, UploadFile, Form, BackgroundTasks
+from fastapi import FastAPI, File, UploadFile, Form, BackgroundTasks, WebSocket, WebSocketDisconnect # [修改] 匯入 WebSocket
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-import os
-import asyncio
-import time
-import httpx
+import os # [新增] 匯入 os
 
+import asyncio
+
+
+# 舊程式碼中的主要運算類別
 from emogene.realtime.gene_stream import GeneFace2Infer
 
 # --- 1. 初始化 FastAPI 應用和模型 ---
@@ -31,6 +34,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# [新增] 掛載一個靜態檔案目錄
+# 這會告訴 FastAPI，所有根路徑的請求都去 'realtime' 目錄下找對應的檔案
+# 我們假設 server.py 和 index.html 在同一個目錄下
+# current_dir = os.path.dirname(os.path.abspath(__file__))
+# app.mount("/", StaticFiles(directory=current_dir, html=True), name="static")
+
+
+# [新增] 建立一個專門提供 index.html 的端點
 @app.get("/")
 async def read_index():
     # [修改] 使用絕對路徑來定位 index.html
@@ -46,123 +57,84 @@ async def read_index():
         
     return FileResponse(index_path)
 
+# --- 2. 定義 API 的請求模型 ---
+
 class StreamParams(BaseModel):
     # 這裡定義所有來自前端的參數
     blink_mode: str = 'none'
     temperature: float = 0.0
     mouth_amp: float = 0.4
+    # ... 您可以從舊的 webui.py 中加入所有需要的滑桿和選項 ...
 
-# 新增：HLS HTTP 基底（可用環境變數覆蓋）
-HLS_HTTP_BASE = os.getenv("HLS_HTTP_BASE", "http://127.0.0.1:11842/hls")
+# --- 3. 建立核心推流函數 (從舊程式碼修改而來) ---
 
-async def wait_until_manifest_ready(stream_key: str, timeout_sec: float = 30.0, interval_sec: float = 0.5) -> str:
+async def run_inference_and_stream(params: dict, websocket: WebSocket): # [修改] 增加 websocket 參數
     """
-    輪詢 HLS m3u8 是否可用（HTTP 200 且內容為 #EXTM3U），回傳完整 hls_url。
+    這個函數將在背景執行，並在準備好時透過 WebSocket 通知前端
     """
-    url = f"{HLS_HTTP_BASE}/{stream_key}.m3u8"
-    start = time.time()
-    headers = {"Cache-Control": "no-cache", "Pragma": "no-cache"}
-    async with httpx.AsyncClient(timeout=5.0) as client:
-        while True:
-            try:
-                # 加上時間參數避免快取
-                r = await client.get(url, headers=headers, params={"t": int(time.time() * 1000)})
-                if r.status_code == 200 and r.text.startswith("#EXTM3U"):
-                    return url
-            except Exception:
-                pass
-            if time.time() - start > timeout_sec:
-                raise TimeoutError(f"Timeout waiting for HLS manifest: {url}")
-            await asyncio.sleep(interval_sec)
-
-def pump_frames_sync(infer_obj: GeneFace2Infer, samples, inp, process) -> int:
-    """
-    同步函式：連續把影格寫入 ffmpeg stdin，直到完成或管線中斷。
-    """
-    frame_count = 0
+    stream_key = params.get('stream_key', 'unknown') # 先獲取 stream_key 以便於日誌記錄
     try:
-        for frame in infer_obj.stream_forward_system(samples, inp):
-            try:
-                process.stdin.write(frame.tobytes())
-                frame_count += 1
-            except (IOError, BrokenPipeError):
-                break
-    finally:
-        try:
-            process.stdin.close()
-        except Exception:
-            pass
-    return frame_count
-
-
-async def run_inference_and_stream(params: dict, websocket: WebSocket):
-    """
-    背景推流：啟動 ffmpeg -> 併發送幀 -> 等 m3u8 可用 -> 通知前端 ready。
-    """
-    stream_key = params.get('stream_key', 'unknown')
-    try:
+        # ... (準備輸入參數的程式碼不變) ...
         inp = params.copy()
         inp['drv_pose'] = 'nearest'
         samples = infer_obj.prepare_batch_from_inp(inp)
         audio_path = infer_obj.wav16k_name
         stream_key = inp['stream_key']
         rtmp_url = f"rtmp://localhost:19350/live/{stream_key}"
-
+        
         command = [
-            'ffmpeg', '-y',
-            '-f', 'rawvideo', '-vcodec', 'rawvideo',
+            'ffmpeg', '-y', '-f', 'rawvideo', '-vcodec', 'rawvideo',
             '-s', '512x512', '-pix_fmt', 'rgb24', '-r', '25', '-i', '-',
-            '-i', audio_path,
+            '-i', audio_path, 
             '-c:v', 'libx264', '-preset', 'veryfast', '-tune', 'zerolatency',
-            '-c:a', 'aac', '-ar', '44100',
-            '-f', 'flv', rtmp_url
+            '-c:a', 'aac', '-ar', '44100', '-f', 'flv',
+            rtmp_url
         ]
+
         print(f"Starting FFmpeg for stream key: {stream_key}")
         process = subprocess.Popen(command, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        # [修改] 給 Nginx 一點時間來建立檔案
+        await asyncio.sleep(2) # 使用 asyncio.sleep
+        
+        # [修改] 直接、非同步地發送「準備就緒」的信號
+        print(f"Notifying client to start player for stream {stream_key}")
+        await websocket.send_json({"status": "ready", "stream_key": stream_key})
+        
+        frame_count = 0
+        # ... (推流迴圈不變) ...
 
-        # 併發：一邊寫入影格，一邊等待 m3u8 就緒
-        pump_task = asyncio.create_task(asyncio.to_thread(pump_frames_sync, infer_obj, samples, inp, process))
-
-        # 等待 m3u8 可用後再通知前端
-        try:
-            hls_url = await wait_until_manifest_ready(stream_key, timeout_sec=30.0, interval_sec=0.5)
-            print(f"HLS manifest is ready: {hls_url}")
-            await websocket.send_json({"status": "ready", "stream_key": stream_key, "hls_url": hls_url})
-        except TimeoutError as te:
-            msg = str(te)
-            print(msg)
-            await websocket.send_json({"status": "error", "message": msg})
+        for frame in infer_obj.stream_forward_system(samples, inp):
             try:
-                process.terminate()
-            except Exception:
-                pass
-            return
-
-        # 等待推流完成
-        frame_count = await pump_task
+                process.stdin.write(frame.tobytes())
+                frame_count += 1
+            except (IOError, BrokenPipeError) as e:
+                print(f"FFmpeg process pipe broken for stream {stream_key}: {e}")
+                break
+        
+        process.stdin.close()
         stderr_output = process.stderr.read().decode('utf-8', errors='ignore')
         process.wait()
-
+        
         if process.returncode != 0:
             print(f"FFmpeg Error for stream {stream_key}:\n{stderr_output}")
         else:
             print(f"Stream {stream_key} finished successfully. Total frames: {frame_count}")
 
+    # except Exception as e:
+    #     print(f"Inference Error for stream {stream_key}: {e}\n{traceback.format_exc()}")
     except Exception as e:
         print(f"Inference Error for stream {stream_key}: {e}\n{traceback.format_exc()}")
-        try:
-            await websocket.send_json({"status": "error", "message": str(e)})
-        except Exception:
-            pass
+        # [修改] 如果出錯，也直接發送
+        await websocket.send_json({"status": "error", "message": str(e)})
     finally:
+        # [修改] 確保 WebSocket 連線被關閉
         print(f"Closing WebSocket for stream {stream_key}")
-        try:
-            await websocket.close()
-        except Exception:
-            pass
+        await websocket.close()
 
 
-# just for testing
+
+# [新增] 建立一個非串流的測試推論函數
 def run_test_inference(params: dict):
     """
     這個函數只會執行一幀的推論，用於測試模型和API是否正常，不進行推流。
@@ -188,6 +160,7 @@ def run_test_inference(params: dict):
         print(f"Test Inference Error: {e}\n{traceback.format_exc()}")
         return False
 
+# [新增] 建立一個非串流的測試 API 端點
 @app.post("/test_inference")
 async def test_inference(
     audio_file: UploadFile = File(...)
@@ -280,8 +253,6 @@ async def test_inference(
 
 #     except Exception as e:
 #         return JSONResponse(status_code=500, content={"message": f"Error: {e}"})
-
-
 # [修改] start_stream 端點，現在它只負責儲存檔案和返回 stream_key
 @app.post("/start_stream")
 async def start_stream(
@@ -343,11 +314,14 @@ async def websocket_endpoint(websocket: WebSocket, stream_key: str):
         # 確保在出錯時也關閉連線
         if not websocket.client_state == 'DISCONNECTED':
             await websocket.close()
+            
+            
+# --- 5. 定義啟動伺服器的程式碼 ---
 
 if __name__ == "__main__":
     import uvicorn
     parser = argparse.ArgumentParser()
-    
+    # 從舊程式碼複製所有模型路徑參數
     parser.add_argument("--a2m_ckpt", type=str, default='checkpoints/audio2motion_vae/model_ckpt_steps_400000.ckpt')
     parser.add_argument("--postnet_ckpt", type=str, default='')
     parser.add_argument("--head_ckpt", type=str, default='')
@@ -369,3 +343,34 @@ if __name__ == "__main__":
     print("Model loaded successfully.")
     
     uvicorn.run(app, host="0.0.0.0", port=args.port)
+    
+    
+
+
+# #### 第四步：新的運行流程
+
+# 1.  **啟動 Nginx 伺服器** (和之前一樣)
+#     在一個終端機中，確保您的本地 Nginx 正在運行：
+#     ```bash
+#     /home/aaron/nginx/sbin/nginx
+#     ```
+
+# 2.  **啟動 FastAPI 後端伺服器**
+#     在另一個終端機中，進入 `realtime` 目錄並啟動 `server.py`：
+#     ```bash
+#     # 啟用您的 conda 環境
+#     conda activate geneface 
+#     # 進入目錄
+#     cd /home/aaron/project/server/models/GeneFacePlusPlus/emogene/realtime/
+#     # 啟動伺服器
+#     python server.py
+#     ```
+#     您會看到日誌顯示模型正在載入，然後提示 `Uvicorn running on http://0.0.0.0:8000`。
+
+# 3.  **打開前端網頁**
+#     直接用您的瀏覽器打開 `index.html` 檔案。
+
+# 4.  **測試**
+#     在網頁上選擇一個音訊檔案，點擊 "Generate Stream"。觀察 "狀態" 區域的變化，並在瀏覽器開發者工具的 "主控台" 和 "網路" 分頁中查看日誌和請求。
+
+# 這個架構讓每一個環節都變得清晰可控，是解決您問題的根本之道。// filepath: /home/aaron/project/server/models/GeneFacePlusPlus/emogene/realtime/server.py
