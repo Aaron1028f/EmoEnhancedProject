@@ -36,5 +36,11 @@ pipe = pipeline(
 
 print('--' * 20)
 
+import time
+
+start = time.time()
 my_result = pipe("ted1.wav")
+print(f"duration: {time.time() - start}")
+
+
 print(my_result["text"])
