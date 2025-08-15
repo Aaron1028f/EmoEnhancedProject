@@ -37,7 +37,8 @@ from cosyvoice.utils.common import set_all_random_seed
 inference_mode_list = ['3s极速复刻', '自然语言控制']
 instruct_dict = {'3s极速复刻': '1. 选择prompt音频文件，或录入prompt音频，注意不超过30s，若同时提供，优先选择prompt音频文件\n2. 输入prompt文本\n3. 点击生成音频按钮',
                  '自然语言控制': '1. 选择prompt音频文件，或录入prompt音频，注意不超过30s，若同时提供，优先选择prompt音频文件\n2. 输入instruct文本\n3. 点击生成音频按钮'}
-stream_mode_list = [('否', False)]
+# stream_mode_list = [('否', False)]
+stream_mode_list = [('否', False), ('是', True)]
 max_val = 0.8
 
 
@@ -74,7 +75,7 @@ def prompt_wav_recognition(prompt_wav):
 
 def generate_audio(tts_text, mode_checkbox_group, prompt_text, prompt_wav_upload, prompt_wav_record, instruct_text,
                    seed, stream):
-    stream = False
+    # stream = False
     if len(tts_text) > 200:
         gr.Warning('您输入的文字过长，请限制在200字以内')
         return (target_sr, default_data)
@@ -178,7 +179,7 @@ def main():
         with gr.Row():
             mode_checkbox_group = gr.Radio(choices=inference_mode_list, label='选择推理模式', value=inference_mode_list[0])
             instruction_text = gr.Text(label="操作步骤", value=instruct_dict[inference_mode_list[0]], scale=0.5)
-            stream = gr.Radio(choices=stream_mode_list, label='是否流式推理', value=stream_mode_list[0][1])
+            stream = gr.Radio(choices=stream_mode_list, label='是否流式推理', value=stream_mode_list[1][1])
             with gr.Column(scale=0.25):
                 seed_button = gr.Button(value="\U0001F3B2")
                 seed = gr.Number(value=0, label="随机推理种子")
@@ -191,7 +192,8 @@ def main():
 
         generate_button = gr.Button("生成音频")
 
-        audio_output = gr.Audio(label="合成音频", autoplay=True, streaming=False)
+        # audio_output = gr.Audio(label="合成音频", autoplay=True, streaming=False)
+        audio_output = gr.Audio(label="合成音频", autoplay=True, streaming=True)
 
         seed_button.click(generate_seed, inputs=[], outputs=seed)
         generate_button.click(generate_audio,
