@@ -11,7 +11,7 @@ wav_file = "./ted1.wav"
 import time
 print('start inference')
 start = time.time()
-res = model.generate(wav_file, output_dir="./outputs", granularity="utterance", extract_embedding=False)
+res = model.generate(wav_file, output_dir="./outputs", granularity="utterance", extract_embedding=True)
 print(f"Time taken: {time.time() - start:.2f} seconds")
 # print(res)
 # for key, value in res[0].items():
@@ -25,3 +25,8 @@ for emotion, score in zip(mapping_table, res[0]['scores']):
 # print the emotion with the highest score
 max_emotion = max(zip(mapping_table, res[0]['scores']), key=lambda x: x[1])
 print(f"Highest emotion: {max_emotion[0]} with score {max_emotion[1]}")
+
+print('-'*100)
+
+print(res[0]['feats'])
+print(res[0]['feats'].shape) # (1024,)
