@@ -58,22 +58,22 @@ def generate_video_from_api(audio_filepath, video_output_filepath):
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser(description="Generate video from audio using API")
-    # parser.add_argument("--audio_path", type=str, required=True, help="Path to the input audio file")
-    # # ex: "/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/RAVDESS/Actor_01/03-01-01-01-01-01-01.wav"
+    parser = argparse.ArgumentParser(description="Generate video from audio using API")
+    parser.add_argument("--audio_path", type=str, required=True, help="Path to the input audio file")
+    # ex: "/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/RAVDESS/Actor_01/03-01-01-01-01-01-01.wav"
     
-    # parser.add_argument("--output_base_dir", type=str, required=True, help="Directory to save the output video file")
-    # # ex: "/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/emogene_ver"
+    parser.add_argument("--output_base_dir", type=str, required=True, help="Directory to save the output video file")
+    # ex: "/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/emogene_ver"
 
-    # args = parser.parse_args()
+    args = parser.parse_args()
 
-    # # get the output file name and path
-    # abs_audio_path = args.audio_path
-    # abs_output_base_dir = args.output_base_dir
+    # get the output file name and path
+    abs_audio_path = args.audio_path
+    abs_output_base_dir = args.output_base_dir
     
     # testing
-    abs_audio_path = "/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/RAVDESS/Actor_01/03-01-01-01-01-01-01.wav"
-    abs_output_base_dir = "/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/emogene_ver"
+    # abs_audio_path = "/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/RAVDESS/Actor_01/03-01-01-01-01-01-01.wav"
+    # abs_output_base_dir = "/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/emogene_ver"
 
     audio_filename = os.path.basename(abs_audio_path) # ex: 03-01-01-01-01-01-01.wav
     video_filename = audio_filename.replace('.wav', '.mp4') # ex: 03-01-01-01-01-01-01.mp4
