@@ -39,16 +39,27 @@ python extract_filelist.py
 cd server/models/GeneFacePlusPlus/
 python emogene/evaluation/DATA/prepare_data/server_emogene.py
 
-# run testing emogene client
+# run emogene (generate May) client
 cd server/models/GeneFacePlusPlus/emogene/evaluation/DATA/prepare_data/
-python gen_emogene.py 
+python gen_emogene_may.py 
+
+# run testing emogene client
+# cd server/models/GeneFacePlusPlus/emogene/evaluation/DATA/prepare_data/
+# python gen_emogene.py 
+
+
 
 # --------------------------------------------------------- #
 # run genefacepp server
+CUDA_VISIBLE_DEVICES=1
 cd server/models/GeneFacePlusPlus/
 python emogene/evaluation/DATA/prepare_data/server_genefacepp.py
 
-# run testing genefacepp server
+# run genefacepp (generate May) client
 cd server/models/GeneFacePlusPlus/emogene/evaluation/DATA/prepare_data/
-python gen_genefacepp.py 
+python gen_genefacepp_may.py 
+
+# # run testing genefacepp server
+# cd server/models/GeneFacePlusPlus/emogene/evaluation/DATA/prepare_data/
+# python gen_genefacepp.py 
 ```

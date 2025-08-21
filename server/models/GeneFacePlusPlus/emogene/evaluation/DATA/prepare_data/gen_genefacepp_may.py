@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 import argparse
 import time
 
-SERVER_HOST = "http://127.0.0.1:9000"
+SERVER_HOST = "http://127.0.0.1:9001"
 API_ENDPOINT = "/generate_video"
 SERVER_URL = urljoin(SERVER_HOST, API_ENDPOINT)
 
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output_base_dir", 
         type=str, 
-        default="/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/emogene_ver/RAVDESS",
+        default="/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/genefacepp_ver/RAVDESS",
         help="儲存輸出影片的根目錄。"
     )
     args = parser.parse_args()

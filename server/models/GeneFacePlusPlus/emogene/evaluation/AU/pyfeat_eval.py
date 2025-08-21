@@ -1,52 +1,152 @@
-# https://github.com/cosanlab/py-feat/blob/main/docs/basic_tutorials/02_detector_vids.ipynb
-
+# source: https://github.com/cosanlab/py-feat/blob/main/docs/basic_tutorials/02_detector_vids.ipynb
 from feat import Detector
+import matplotlib.pyplot as plt
+from feat.utils.io import get_test_data_path
+import os
+import numpy as np
 
 detector = Detector(device='cuda')
 
-# detector
+# test_video_path = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/emogene_ver/RAVDESS/Actor_20/03-01-07-02-01-02-20.mp4'
+EMOGENE_BASE_DIR = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/emogene_ver/RAVDESS'
+GENEFACEPP_BASE_DIR = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/genefacepp_ver/RAVDESS'
+VIDEO_DIR = '/Actor_{actor_id}/03-01-0{emo_id}-02-01-02-{actor_id}.mp4'
 
-from feat.utils.io import get_test_data_path
-import os
+# ACTOR_ID_LIST = [i for i in range(1, 25)] # actor id: 1~24
+# EMOTION_ID_LIST = [i for i in range(1, 9)] # emotion id: 1~8
 
-# test_data_dir = get_test_data_path()
-# test_video_path = os.path.join(test_data_dir, "WolfgangLanger_Pexels.mp4")
-
-# test_video_path = 'datas/May/tmp.mp4'
-test_video_path = 'datas/May/tmp2.mp4'
-
-
-# Show video
-# from IPython.core.display import Video
-
-# Video(test_video_path, embed=False)
-out_name = test_video_path.replace('.mp4', '.csv')
-print(out_name)
-video_prediction = detector.detect_video(
-    test_video_path, data_type="video", skip_frames=3, face_detection_threshold=0.95, save=out_name
-)
-# print(video_prediction.head())
-
-print(video_prediction.shape)
-print(video_prediction.columns)
-# # Frame 48 = ~0:02
-# # Frame 408 = ~0:14
-# video_prediction.query("frame in [48, 100]").plot_detections(
-#     faceboxes=False, add_titles=False
-# )
-
-print(video_prediction.emotions)
+ACTOR_ID_LIST = [20] # actor id: 1~24
+EMOTION_ID_LIST = [5] # emotion id: 1~8
 
 
-# plot video_prediction.emotions
-import matplotlib.pyplot as plt
+EMOTION_MAP = {
+    1: 'neutral',
+    2: 'calm',
+    3: 'happy',
+    4: 'sad',
+    5: 'angry',
+    6: 'fearful',
+    7: 'disgust',
+    8: 'surprised'
+}
 
-plt.figure(figsize=(10, 5))
-for emotion in video_prediction.emotions.columns:
-    plt.plot(video_prediction.emotions.index, video_prediction.emotions[emotion], label=emotion)
-plt.title("Emotion Detection Over Time")
-plt.xlabel("Frame")
-plt.ylabel("Emotion Score")
-plt.legend()
-# plt.show()
-plt.savefig('emotion_detection_over_time.png', dpi=300, bbox_inches='tight')
+print(EMOTION_MAP[1])
+
+
+def detect_videos(video_path):
+    out_name = video_path.replace('.mp4', '.csv')
+
+    video_prediction = detector.detect_video(
+        video_path, data_type="video", skip_frames=3, face_detection_threshold=0.95, save=out_name
+    )
+    # write video_prediction
+    # video_prediction.to_csv(out_name, index=False)
+    
+    return video_prediction, out_name
+
+    # print(video_prediction.head())
+    # print(video_prediction.shape)
+    # print(video_prediction.columns)
+    # print(video_prediction.emotions)
+
+def plot_emotion_means(genefacepp_emotion_means, emogene_emotion_means, title="Mean Emotion Scores Comparison", fig_id='xxx'):
+    # plot emotion means using bar graph
+    plt.figure(figsize=(10, 5))
+    bar_width = 0.35
+    x = np.arange(len(genefacepp_emotion_means))
+
+    plt.bar(x - bar_width/2, genefacepp_emotion_means.values, color='blue', width=bar_width, label='GeneFace++')
+    plt.bar(x + bar_width/2, emogene_emotion_means.values, color='red', width=bar_width, label='EmoGene')
+
+    plt.title("Mean Emotion Scores Comparison:           " + title)
+    plt.xlabel("Emotion")
+    plt.ylabel("Mean Score")
+    plt.xticks(x, genefacepp_emotion_means.index, rotation=45)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('mean_emotion_scores_comparison.png', dpi=300, bbox_inches='tight')
+    plt.close()
+
+def plot_AU_means(genefacepp_AU_means, emogene_AU_means, title="Mean AU Scores Comparison", fig_id='xxx'):
+    # plot AU means using bar graph
+    plt.figure(figsize=(10, 5))
+    bar_width = 0.35
+    x = np.arange(len(genefacepp_AU_means))
+
+    plt.bar(x - bar_width/2, genefacepp_AU_means.values, color='blue', width=bar_width, label='GeneFace++')
+    plt.bar(x + bar_width/2, emogene_AU_means.values, color='red', width=bar_width, label='EmoGene')
+
+    plt.title("Mean AU Scores Comparison:           " + title)
+    plt.xlabel("AU")
+    plt.ylabel("Mean Score")
+    plt.xticks(x, genefacepp_AU_means.index, rotation=45)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('mean_AU_scores_comparison.png', dpi=300, bbox_inches='tight')
+    plt.close()
+
+
+# # plot emotion over time
+# plt.figure(figsize=(10, 5))
+# for emotion in video_prediction.emotions.columns:
+#     plt.plot(video_prediction.emotions.index, video_prediction.emotions[emotion], label=emotion)
+# plt.title("Emotion Detection Over Time")
+# plt.xlabel("Frame")
+# plt.ylabel("Emotion Score")
+# plt.legend()
+# plt.savefig('emotion_detection_over_time.png', dpi=300, bbox_inches='tight')
+# plt.close()
+
+# # AU
+# AUs = video_prediction.aus
+# print(AUs.shape)
+# print(AUs.columns)
+# print(AUs)
+
+# # AU mean
+# au_means = AUs.mean()
+# print(au_means)
+
+# # plot AU mean
+# plt.figure(figsize=(10, 5))
+# plt.bar(au_means.index, au_means.values)
+# plt.title("Mean AU Scores")
+# plt.xlabel("AU")
+# plt.ylabel("Mean Score")
+# plt.xticks(rotation=45)
+# plt.tight_layout()
+# plt.savefig('mean_au_scores.png', dpi=300, bbox_inches='tight')
+# plt.close()
+
+
+
+def main():
+    # for all actors and all emotions
+    for actor_id in ACTOR_ID_LIST:
+        for emo_id in EMOTION_ID_LIST:
+            # emogene detection
+            emogene_video_path = EMOGENE_BASE_DIR + VIDEO_DIR.format(actor_id=actor_id, emo_id=emo_id)
+            emogene_prediction, emogene_out_name = detect_videos(emogene_video_path)
+
+            # genefacepp detection
+            genefacepp_video_path = GENEFACEPP_BASE_DIR + VIDEO_DIR.format(actor_id=actor_id, emo_id=emo_id)
+            genefacepp_prediction, genefacepp_out_name = detect_videos(genefacepp_video_path)
+
+            # calculate emotion mean and plot comparison bar graph
+            emogene_emotion_means = emogene_prediction.emotions.mean()
+            genefacepp_emotion_means = genefacepp_prediction.emotions.mean()
+            plot_emotion_means(
+                genefacepp_emotion_means, emogene_emotion_means, title=f"Actor {actor_id} - {EMOTION_MAP[emo_id]}", fig_id=f"a{actor_id:02d}e{emo_id}"
+            )
+            
+            # calculate AU mean and plot comparison bar graph
+            emogene_AU_means = emogene_prediction.aus.mean()
+            genefacepp_AU_means = genefacepp_prediction.aus.mean()
+            plot_AU_means(
+                genefacepp_AU_means, emogene_AU_means, title=f"Actor {actor_id} - {EMOTION_MAP[emo_id]}", fig_id=f"a{actor_id:02d}e{emo_id}"
+            )
+
+
+if __name__ == '__main__':
+    main()
+

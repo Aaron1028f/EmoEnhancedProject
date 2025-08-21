@@ -366,7 +366,7 @@ async def generate_video_api(request: GenerateRequest):
         
         # fixed arguments of GeneFace++
         'blink_mode': None,
-        'temperature': 0.2, 
+        'temperature': 0, 
         'lle_percent': 1,
         'mouth_amp': 0.4,
         'fp16': False, 

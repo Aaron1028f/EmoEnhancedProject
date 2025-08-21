@@ -4,5 +4,8 @@ dataset: RAVDESS
 
 compare: GeneFace++ and EmoGene
 
-AU detection toolkit: pyfeat or openface ???
+AU detection toolkit: py-feat
+
+
+
 

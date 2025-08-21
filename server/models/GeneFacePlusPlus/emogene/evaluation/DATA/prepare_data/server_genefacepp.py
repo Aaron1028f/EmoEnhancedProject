@@ -103,9 +103,9 @@ def ref_video_fn(path_of_ref_video):
     else: return gr.update(value=False)
     
 # (genefacepp_demo 函式保持不變)
-def genefacepp_demo(infer_obj, audio2secc_dir, postnet_dir, head_model_dir, torso_model_dir, device='cuda', warpfn=None):
+def genefacepp_demo(infer_obj, audio2secc_dir, postnet_dir, head_model_dir, torso_model_dir, device='cuda:0', warpfn=None):
     # ... 這個函式幾乎不變，但注意 infer_obj 是傳入的 ...
-    # ... 這樣 API 和 Gradio 可以共享同一個模型實例 ...
+    # ... 這樣 API 和 Gradio 可以共享同一個模型實例 ...s
     sep_line = "-" * 40
 
     # infer_obj = Inferer(
@@ -239,7 +239,7 @@ def genefacepp_demo(infer_obj, audio2secc_dir, postnet_dir, head_model_dir, tors
 class GenerateRequest(BaseModel):
     audio_path: str
     mouth_amp: float = 0.4
-    temperature: float = 0.0
+    temperature: float = 0
     # 你可以把所有需要的參數都在這裡定義，並給予預設值
     # 這樣外部程式呼叫時可以只傳送必要的 audio_path
     blink_mode: str = 'none'
