@@ -10,14 +10,19 @@ detector = Detector(device='cuda')
 # test_video_path = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/emogene_ver/RAVDESS/Actor_20/03-01-07-02-01-02-20.mp4'
 EMOGENE_BASE_DIR = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/emogene_ver/RAVDESS'
 GENEFACEPP_BASE_DIR = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/genefacepp_ver/RAVDESS'
+
+# Always test with the sencond try of "Kids are talking by the door." using strong intensity
 VIDEO_DIR = '/Actor_{actor_id}/03-01-0{emo_id}-02-01-02-{actor_id}.mp4'
+
+SAVE_FIG_BASE_DIR = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/AU/figures/'
+if not os.path.exists(SAVE_FIG_BASE_DIR):
+    os.makedirs(SAVE_FIG_BASE_DIR)
 
 # ACTOR_ID_LIST = [i for i in range(1, 25)] # actor id: 1~24
 # EMOTION_ID_LIST = [i for i in range(1, 9)] # emotion id: 1~8
 
 ACTOR_ID_LIST = [20] # actor id: 1~24
 EMOTION_ID_LIST = [5] # emotion id: 1~8
-
 
 EMOTION_MAP = {
     1: 'neutral',
@@ -64,7 +69,7 @@ def plot_emotion_means(genefacepp_emotion_means, emogene_emotion_means, title="M
     plt.xticks(x, genefacepp_emotion_means.index, rotation=45)
     plt.legend()
     plt.tight_layout()
-    plt.savefig('mean_emotion_scores_comparison.png', dpi=300, bbox_inches='tight')
+    plt.savefig(f'{SAVE_FIG_BASE_DIR}/mean_emotion_scores_comparison_{fig_id}.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 def plot_AU_means(genefacepp_AU_means, emogene_AU_means, title="Mean AU Scores Comparison", fig_id='xxx'):
@@ -82,43 +87,35 @@ def plot_AU_means(genefacepp_AU_means, emogene_AU_means, title="Mean AU Scores C
     plt.xticks(x, genefacepp_AU_means.index, rotation=45)
     plt.legend()
     plt.tight_layout()
-    plt.savefig('mean_AU_scores_comparison.png', dpi=300, bbox_inches='tight')
+    plt.savefig(f'{SAVE_FIG_BASE_DIR}/mean_AU_scores_comparison_{fig_id}.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 
-# # plot emotion over time
-# plt.figure(figsize=(10, 5))
-# for emotion in video_prediction.emotions.columns:
-#     plt.plot(video_prediction.emotions.index, video_prediction.emotions[emotion], label=emotion)
-# plt.title("Emotion Detection Over Time")
-# plt.xlabel("Frame")
-# plt.ylabel("Emotion Score")
-# plt.legend()
-# plt.savefig('emotion_detection_over_time.png', dpi=300, bbox_inches='tight')
-# plt.close()
+def plot_emotion_over_time(video_prediction, title="Emotion Detection Over Time", fig_id='xxx'):
+    # plot emotion over time
+    plt.figure(figsize=(10, 5))
+    for emotion in video_prediction.emotions.columns:
+        plt.plot(video_prediction.emotions.index, video_prediction.emotions[emotion], label=emotion)
+        
+    plt.title("Emotion Detection Over Time:           " + title)
+    plt.xlabel("Frame")
+    plt.ylabel("Emotion Score")
+    plt.legend()
+    plt.savefig(f'{SAVE_FIG_BASE_DIR}/emotion_detection_over_time_{fig_id}.png', dpi=300, bbox_inches='tight')
+    plt.close()
 
-# # AU
-# AUs = video_prediction.aus
-# print(AUs.shape)
-# print(AUs.columns)
-# print(AUs)
+def plot_AU_over_time(video_prediction, title="AU Detection Over Time", fig_id='xxx'):
+    # plot AU over time
+    plt.figure(figsize=(10, 5))
+    for au in video_prediction.aus.columns:
+        plt.plot(video_prediction.aus.index, video_prediction.aus[au], label=au)
 
-# # AU mean
-# au_means = AUs.mean()
-# print(au_means)
-
-# # plot AU mean
-# plt.figure(figsize=(10, 5))
-# plt.bar(au_means.index, au_means.values)
-# plt.title("Mean AU Scores")
-# plt.xlabel("AU")
-# plt.ylabel("Mean Score")
-# plt.xticks(rotation=45)
-# plt.tight_layout()
-# plt.savefig('mean_au_scores.png', dpi=300, bbox_inches='tight')
-# plt.close()
-
-
+    plt.title("AU Detection Over Time:           " + title)
+    plt.xlabel("Frame")
+    plt.ylabel("AU Score")
+    plt.legend()
+    plt.savefig(f'{SAVE_FIG_BASE_DIR}/au_detection_over_time_{fig_id}.png', dpi=300, bbox_inches='tight')
+    plt.close()
 
 def main():
     # for all actors and all emotions
@@ -132,13 +129,23 @@ def main():
             genefacepp_video_path = GENEFACEPP_BASE_DIR + VIDEO_DIR.format(actor_id=actor_id, emo_id=emo_id)
             genefacepp_prediction, genefacepp_out_name = detect_videos(genefacepp_video_path)
 
+            # ============================================== PLOT EMOTION ===========================================================================
             # calculate emotion mean and plot comparison bar graph
             emogene_emotion_means = emogene_prediction.emotions.mean()
             genefacepp_emotion_means = genefacepp_prediction.emotions.mean()
             plot_emotion_means(
                 genefacepp_emotion_means, emogene_emotion_means, title=f"Actor {actor_id} - {EMOTION_MAP[emo_id]}", fig_id=f"a{actor_id:02d}e{emo_id}"
             )
-            
+            # plot emotion detection over time
+            plot_emotion_over_time(
+                emogene_prediction, title=f"EmoGene - Actor {actor_id} - {EMOTION_MAP[emo_id]}", fig_id=f"a{actor_id:02d}e{emo_id}_emogene"
+            )
+            plot_emotion_over_time(
+                genefacepp_prediction, title=f"GeneFace++ - Actor {actor_id} - {EMOTION_MAP[emo_id]}", fig_id=f"a{actor_id:02d}e{emo_id}_genefacepp"
+            )
+            # ============================================== PLOT EMOTION ===========================================================================
+
+            # ============================================== PLOT AU=================================================================================
             # calculate AU mean and plot comparison bar graph
             emogene_AU_means = emogene_prediction.aus.mean()
             genefacepp_AU_means = genefacepp_prediction.aus.mean()
@@ -146,6 +153,13 @@ def main():
                 genefacepp_AU_means, emogene_AU_means, title=f"Actor {actor_id} - {EMOTION_MAP[emo_id]}", fig_id=f"a{actor_id:02d}e{emo_id}"
             )
 
+            plot_AU_over_time(
+                emogene_prediction, title=f"EmoGene - Actor {actor_id} - {EMOTION_MAP[emo_id]}", fig_id=f"a{actor_id:02d}e{emo_id}_emogene"
+            )
+            plot_AU_over_time(
+                genefacepp_prediction, title=f"GeneFace++ - Actor {actor_id} - {EMOTION_MAP[emo_id]}", fig_id=f"a{actor_id:02d}e{emo_id}_genefacepp"
+            )
+            # ============================================== PLOT AU=================================================================================
 
 if __name__ == '__main__':
     main()

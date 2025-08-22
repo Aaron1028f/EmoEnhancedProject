@@ -51,7 +51,7 @@ python gen_emogene_may.py
 
 # --------------------------------------------------------- #
 # run genefacepp server
-CUDA_VISIBLE_DEVICES=1
+# CUDA_VISIBLE_DEVICES=1
 cd server/models/GeneFacePlusPlus/
 python emogene/evaluation/DATA/prepare_data/server_genefacepp.py
 
