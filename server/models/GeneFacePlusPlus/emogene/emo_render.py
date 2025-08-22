@@ -64,6 +64,29 @@ model_bsList = ["browDownLeft",
                 "noseSneerRight",
                 "tongueOut"]
 
+# eye and eyebrow area
+eye_eyebrow_area_bslist = [
+    "eyeBlinkLeft",
+    "eyeBlinkRight",
+    "eyeLookDownLeft",
+    "eyeLookDownRight",
+    "eyeLookInLeft",
+    "eyeLookInRight",
+    "eyeLookOutLeft",
+    "eyeLookOutRight",
+    "eyeLookUpLeft",
+    "eyeLookUpRight",
+    "eyeSquintLeft",
+    "eyeSquintRight",
+    "eyeWideLeft",
+    "eyeWideRight",
+    "browDownLeft",
+    "browDownRight",
+    "browInnerUp",
+    "browOuterUpLeft",
+    "browOuterUpRight"
+]
+
 # ================== Load the blend file ==================
 # when use original face obj
 
@@ -116,7 +139,12 @@ for i in range(frame_num):
         # if obj.data.shape_keys.key_blocks[model_bsList[j]] == "mouthClose":
         #     obj.data.shape_keys.key_blocks[model_bsList[j]].value = curr_bs[j]
         # else:
-        obj.data.shape_keys.key_blocks[model_bsList[j]].value = bs52_level * curr_bs[j]
+        
+        if model_bsList[j] in eye_eyebrow_area_bslist:
+            obj.data.shape_keys.key_blocks[model_bsList[j]].value = bs52_level * curr_bs[j] * 2
+        
+        else:
+            obj.data.shape_keys.key_blocks[model_bsList[j]].value = bs52_level * curr_bs[j]
         # if obj.data.shape_keys.key_blocks[model_bsList[j]].value >= 1:
         #     obj.data.shape_keys.key_blocks[model_bsList[j]].value = 1
             
