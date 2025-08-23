@@ -331,71 +331,149 @@ def compute_LLE_projection_by_parts(feats, feat_database, K=10, gene_feat=None, 
 
     return smoothed_feat_fuse, final_errors, final_weights
 
-def apply_final_mouth_closure(smoothed_feat, gene_feat, final_threshold=0.04, local_smooth_strength=0.5):
+def apply_final_mouth_closure(smoothed_feat, gene_feat, final_threshold=0.04, blend_window_size=4):
     """
-    在全局平滑後，對仍未完全閉合的嘴部進行最終的、外科手術式的修正。
+    在全局平滑後，對仍未完全閉合的嘴部進行最終的、柔和的修正。
+    使用窗口化混合來平滑過渡，避免突變。
 
     Args:
         smoothed_feat (torch.Tensor): [T, 204], 經過全局平滑後的特徵。
         gene_feat (torch.Tensor): [T, 204], 原始的 GeneFace++ 特徵，作為閉嘴的目標。
-        final_threshold (float): 最終的閉合判斷閾值。高於此值被認為是“閉合失敗”。
-        local_smooth_strength (float): 對鄰居幀進行局部平滑的強度 (0到1之間)。
+        final_threshold (float): 最終的閉合判斷閾值。
+        blend_window_size (int): 在目標幀前後進行混合的半徑。總窗口大小為 2*size+1。
 
     Returns:
         torch.Tensor: [T, 204], 經過最終修正的特徵。
     """
-    from emogene.tools.mouth_openness_calculation import calculate_mouth_openness
+    from emogene.tools.mouth_openness_calculation import calculate_mouth_openness, calculate_mouth_openness_dynamic
     
     # 1. 找出閉合失敗的幀
-    # 注意：這裡我們需要一個簡單的 mouth_openness 計算函式，它只計算距離而不做判斷
-    # 假設 calculate_mouth_openness 可以返回一個距離數組
     mouth_openness = calculate_mouth_openness(smoothed_feat, return_distance_only=True)
-    failed_frames = torch.where(mouth_openness > final_threshold)[0]
-    
-    # 找出原始動態檢測出的需要閉合的幀，只在這些幀的子集裡尋找失敗者
-    from emogene.tools.mouth_openness_calculation import calculate_mouth_openness_dynamic
     originally_targeted_frames = calculate_mouth_openness_dynamic(gene_feat)
     
-    # 取交集，確保我們只修正那些本來就想閉嘴但沒做好的幀
-    final_target_frames = [f for f in failed_frames if f in originally_targeted_frames]
+    # 確保我們只修正那些本來就想閉嘴但沒做好的幀
+    failed_mask = (mouth_openness > final_threshold)
+    target_mask = torch.zeros_like(failed_mask)
+    target_mask[originally_targeted_frames] = True
+    final_target_indices = torch.where(failed_mask & target_mask)[0]
     
-    if not final_target_frames:
+    if len(final_target_indices) == 0:
         return smoothed_feat
 
-    print(f"Final closure: Found {len(final_target_frames)} frames that failed to close properly. Applying surgical fix.")
+    print(f"Final closure: Found {len(final_target_indices)} frames that failed to close properly. Applying soft blending fix.")
+    print(f"The frames are: {final_target_indices.tolist()}")
+    print('-'*60)
 
     # 2. 準備數據
     corrected_feat = smoothed_feat.clone()
     corrected_feat_T683 = corrected_feat.reshape([-1, 68, 3])
     gene_feat_T683 = gene_feat.reshape([-1, 68, 3])
+    # mouth_indices = list(range(48, 68))
+    mouth_indices = list(range(0, 68))
+    T = smoothed_feat.shape[0]
+
+    # 3. 創建一個應用於所有幀的基礎權重數組，初始為0
+    blend_weights = torch.zeros(T, device=smoothed_feat.device)
+
+    # 4. 為每個目標窗口生成混合權重
+    # 使用三角窗口 (線性漸變) 作為權重
+    window = torch.bartlett_window(blend_window_size * 2 + 1, periodic=False, device=smoothed_feat.device)
+
+    for frame_idx in final_target_indices:
+        start = max(0, frame_idx - blend_window_size)
+        end = min(T, frame_idx + blend_window_size + 1)
+        
+        win_start = max(0, blend_window_size - frame_idx)
+        win_end = min(len(window), T - frame_idx + blend_window_size)
+
+        # 將窗口權重應用到全局權重數組上
+        # 使用 torch.max 確保重疊的窗口能取最強的修正權重
+        current_weights = blend_weights[start:end]
+        new_weights = window[win_start:win_end]
+        blend_weights[start:end] = torch.max(current_weights, new_weights)
+
+    # 5. 根據最終計算出的權重，一次性應用混合
+    # 擴展權重以便進行廣播操作
+    w = blend_weights.view(T, 1, 1) # [T, 1, 1]
     
-    mouth_indices = list(range(48, 68))
-
-    # 3. 進行硬性替換和局部平滑
-    for frame_idx in final_target_frames:
-        # --- 硬性替換目標幀 ---
-        corrected_feat_T683[frame_idx, mouth_indices, :] = gene_feat_T683[frame_idx, mouth_indices, :]
-
-        # --- 局部平滑鄰居幀 ---
-        # 平滑前一幀
-        prev_idx = frame_idx - 1
-        if prev_idx >= 0 and prev_idx not in final_target_frames: # 確保鄰居本身不是目標
-            # 將鄰居幀的嘴型，向被替換的目標幀的嘴型靠近一點
-            corrected_feat_T683[prev_idx, mouth_indices, :] = \
-                (1 - local_smooth_strength) * corrected_feat_T683[prev_idx, mouth_indices, :] + \
-                local_smooth_strength * corrected_feat_T683[frame_idx, mouth_indices, :]
-
-        # 平滑後一幀
-        next_idx = frame_idx + 1
-        if next_idx < len(smoothed_feat) and next_idx not in final_target_frames:
-            corrected_feat_T683[next_idx, mouth_indices, :] = \
-                (1 - local_smooth_strength) * corrected_feat_T683[next_idx, mouth_indices, :] + \
-                local_smooth_strength * corrected_feat_T683[frame_idx, mouth_indices, :]
+    # 僅對嘴部區域進行加權平均
+    corrected_feat_T683[:, mouth_indices, :] = \
+        (1 - w) * corrected_feat_T683[:, mouth_indices, :] + \
+        w * gene_feat_T683[:, mouth_indices, :]
 
     return corrected_feat_T683.reshape([-1, 204])
 
 
-def apply_smooth_blending_for_closure(emogene_feat, gene_feat, window_size=2):
+# def apply_final_mouth_closure(smoothed_feat, gene_feat, final_threshold=0.04, local_smooth_strength=0.8):
+#     """
+#     在全局平滑後，對仍未完全閉合的嘴部進行最終的、外科手術式的修正。
+
+#     Args:
+#         smoothed_feat (torch.Tensor): [T, 204], 經過全局平滑後的特徵。
+#         gene_feat (torch.Tensor): [T, 204], 原始的 GeneFace++ 特徵，作為閉嘴的目標。
+#         final_threshold (float): 最終的閉合判斷閾值。高於此值被認為是“閉合失敗”。
+#         local_smooth_strength (float): 對鄰居幀進行局部平滑的強度 (0到1之間)。
+
+#     Returns:
+#         torch.Tensor: [T, 204], 經過最終修正的特徵。
+#     """
+#     from emogene.tools.mouth_openness_calculation import calculate_mouth_openness
+    
+#     # 1. 找出閉合失敗的幀
+#     # 注意：這裡我們需要一個簡單的 mouth_openness 計算函式，它只計算距離而不做判斷
+#     # 假設 calculate_mouth_openness 可以返回一個距離數組
+#     mouth_openness = calculate_mouth_openness(smoothed_feat, return_distance_only=True)
+#     failed_frames = torch.where(mouth_openness > final_threshold)[0]
+    
+#     # 找出原始動態檢測出的需要閉合的幀，只在這些幀的子集裡尋找失敗者
+#     from emogene.tools.mouth_openness_calculation import calculate_mouth_openness_dynamic
+#     originally_targeted_frames = calculate_mouth_openness_dynamic(gene_feat)
+    
+#     # 取交集，確保我們只修正那些本來就想閉嘴但沒做好的幀
+#     final_target_frames = [f for f in failed_frames if f in originally_targeted_frames]
+    
+#     if not final_target_frames:
+#         return smoothed_feat
+
+#     print(f"Final closure: Found {len(final_target_frames)} frames that failed to close properly. Applying surgical fix.")
+#     print(f"The frames are: {final_target_frames}")
+#     print('-'*60)
+
+#     # 2. 準備數據
+#     corrected_feat = smoothed_feat.clone()
+#     corrected_feat_T683 = corrected_feat.reshape([-1, 68, 3])
+#     gene_feat_T683 = gene_feat.reshape([-1, 68, 3])
+    
+#     # <exp>
+#     mouth_indices = list(range(48, 68))
+#     # mouth_indices = list(range(0, 68))
+#     # </exp>
+
+#     # 3. 進行硬性替換和局部平滑
+#     for frame_idx in final_target_frames:
+#         # --- 硬性替換目標幀 ---
+#         corrected_feat_T683[frame_idx, mouth_indices, :] = gene_feat_T683[frame_idx, mouth_indices, :]
+
+#         # --- 局部平滑鄰居幀 ---
+#         # 平滑前一幀
+#         prev_idx = frame_idx - 1
+#         if prev_idx >= 0 and prev_idx not in final_target_frames: # 確保鄰居本身不是目標
+#             # 將鄰居幀的嘴型，向被替換的目標幀的嘴型靠近一點
+#             corrected_feat_T683[prev_idx, mouth_indices, :] = \
+#                 (1 - local_smooth_strength) * corrected_feat_T683[prev_idx, mouth_indices, :] + \
+#                 local_smooth_strength * corrected_feat_T683[frame_idx, mouth_indices, :]
+
+#         # 平滑後一幀
+#         next_idx = frame_idx + 1
+#         if next_idx < len(smoothed_feat) and next_idx not in final_target_frames:
+#             corrected_feat_T683[next_idx, mouth_indices, :] = \
+#                 (1 - local_smooth_strength) * corrected_feat_T683[next_idx, mouth_indices, :] + \
+#                 local_smooth_strength * corrected_feat_T683[frame_idx, mouth_indices, :]
+
+#     return corrected_feat_T683.reshape([-1, 204])
+
+
+def apply_smooth_blending_for_closure(emogene_feat, gene_feat, window_size=5):
     """
     在需要閉嘴的幀周圍，將 Emogene 特徵平滑地混合到 GeneFace++ 特徵。
 
