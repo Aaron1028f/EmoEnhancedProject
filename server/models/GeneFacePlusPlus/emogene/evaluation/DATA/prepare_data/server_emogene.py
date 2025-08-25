@@ -388,7 +388,7 @@ async def generate_video_api(request: GenerateRequest):
         'output_video': False,
         'level': 1,
         'person': 3,
-        'bs52_level': 2.5, # 2.5 for May, maybe 1.5 for Feng
+        'bs52_level': 2, # 2 for May, maybe 1.5 for Feng
         'bs_lm_area': 8, # 8 for May, 9 for Feng
     }
     
