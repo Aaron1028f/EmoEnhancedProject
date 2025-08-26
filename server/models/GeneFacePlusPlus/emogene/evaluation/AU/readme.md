@@ -57,7 +57,13 @@ VIDEO_DIR = '/Actor_{actor_id}/03-01-0{emo_id}-02-01-02-{actor_id}.mp4' # 第二
 conda activate pyfeat
 
 cd server/models/GeneFacePlusPlus/emogene/evaluation/AU/
-python pyfeat_eval_plot.py 
+python pyfeat_eval_script.py 
 
+# !!! no longer use pyfeat_eval_plot.py !!!!!
 
 ```
+
+
+## py-feat support AUs
+
+au_mean_AU01       | au_mean_AU02       | au_mean_AU04       | au_mean_AU05       | au_mean_AU06        | au_mean_AU07       | au_mean_AU09       | au_mean_AU10       | au_mean_AU11       | au_mean_AU12        | au_mean_AU14        | au_mean_AU15       | au_mean_AU17    | au_mean_AU20       | au_mean_AU23        | au_mean_AU24        | au_mean_AU25       | au_mean_AU26       | au_mean_AU28        | au_mean_AU43        

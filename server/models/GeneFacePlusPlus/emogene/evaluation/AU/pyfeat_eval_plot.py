@@ -144,31 +144,65 @@ def plot_AU_comparison(actor_id, emo_id, emogene_prediction, genefacepp_predicti
         genefacepp_prediction, title=f"GeneFace++ - Actor {actor_id} - {EMOTION_MAP[emo_id]}", fig_id=f"a{actor_id:02d}e{emo_id}_genefacepp"
     )
     
-def process_results(results_input, src):
-    """
-    Processes video results. Handles two types of input:
-    1. A list of dictionaries (from a live run).
-    2. A pandas DataFrame (loaded from a CSV file).
-    """
-    if isinstance(results_input, list):
-        results_df = pd.DataFrame(results_input)
-        # Save the raw results from the live run
-        results_df.to_csv(f'{SAVE_FIG_BASE_DIR}/results_{src}_RAVDESS_May_raw.csv', index=False)
-    else:
-        # Input is already a DataFrame, likely from a CSV
-        results_df = results_input
-
-    avg = {}
-    grouped = results_df.groupby('emotion')
+def parse_series_from_string(item):
+    """Safely parses a string representation of a pandas Series."""
+    # 1. Handle non-strings or invalid strings first
+    if not isinstance(item, str) or not pd.notna(item) or not item.strip():
+        return pd.Series(dtype=float)
     
-    # # For each column that contains Series-like data
-    # for col in ['emotion_mean', 'au_mean', 'au_max', 'au_std']:
-    #     # This lambda function is robust enough to handle both
-    #     # actual Series objects and string representations from CSVs.
-    #     # It uses pd.concat which can parse the string representation.
-    #     avg[col] = grouped[col].apply(lambda s: pd.concat(
-    #         [pd.read_csv(pd.io.common.StringIO(item), header=None, index_col=0).iloc[:, 0] if isinstance(item, str) else item for item in s]
-    #     ).groupby(level=0).mean())
+    try:
+        # 2. Use StringIO to treat the string as a file
+        # 3. CRITICAL FIX: Use sep='\s+' to split on one or more whitespace characters
+        # 4. Select the first data column (which is at index 1 because index is 0)
+        series = pd.read_csv(
+            pd.io.common.StringIO(item), 
+            header=None, 
+            index_col=0, 
+            sep=r'\s+'
+        ).iloc[:, 0]
+        return series
+    except (IndexError, ValueError):
+        # If any parsing error occurs (e.g., still results in an empty DF), return an empty Series
+        return pd.Series(dtype=float)
+
+# def process_results(results_input, src):
+#     """
+#     Processes video results. Handles two types of input:
+#     1. A list of dictionaries (from a live run).
+#     2. A pandas DataFrame (loaded from a CSV file).
+#     """
+#     if isinstance(results_input, list):
+#         results_df = pd.DataFrame(results_input)
+#         # When saving, convert Series to a consistent string format
+#         for col in ['emotion_mean', 'au_mean', 'au_max', 'au_std']:
+#             if col in results_df.columns:
+#                 results_df[col] = results_df[col].apply(lambda s: s.to_string() if isinstance(s, pd.Series) else s)
+#         results_df.to_csv(f'{SAVE_FIG_BASE_DIR}/results_{src}_RAVDESS_May_raw.csv', index=False)
+#     else:
+#         # Input is already a DataFrame, likely from a CSV
+#         results_df = results_input
+
+#     avg = {}
+#     grouped = results_df.groupby('emotion')
+    
+#     # For each column that contains Series-like data
+#     for col in ['emotion_mean', 'au_mean', 'au_max', 'au_std']:
+#         avg[col] = grouped[col].apply(lambda s: pd.concat(
+#             [parse_series_from_string(item) for item in s]
+#         ).groupby(level=0).mean())
+
+#     return avg
+def process_results(results_list, src):
+    """
+    Processes a list of video result dictionaries.
+    Correctly handles aggregation of pandas Series stored in the list.
+    """
+    results_df = pd.DataFrame(results_list)
+    results_df.to_csv(f'{SAVE_FIG_BASE_DIR}/results_{src}_RAVDESS_May_raw.csv', index=False)
+    
+    avg = {}
+    # Group by the 'emotion' column (e.g., 'happy', 'sad')
+    grouped = results_df.groupby('emotion')
     
     # For each column that contains Series, aggregate them correctly
     for col in ['emotion_mean', 'au_mean', 'au_max', 'au_std']:
@@ -177,25 +211,6 @@ def process_results(results_input, src):
         avg[col] = grouped[col].apply(lambda s: pd.concat(list(s)).groupby(level=0).mean())
 
     return avg
-# def process_results(results_list, src):
-#     """
-#     Processes a list of video result dictionaries.
-#     Correctly handles aggregation of pandas Series stored in the list.
-#     """
-#     results_df = pd.DataFrame(results_list)
-#     results_df.to_csv(f'{SAVE_FIG_BASE_DIR}/results_{src}_RAVDESS_May_raw.csv', index=False)
-    
-#     avg = {}
-#     # Group by the 'emotion' column (e.g., 'happy', 'sad')
-#     grouped = results_df.groupby('emotion')
-    
-#     # For each column that contains Series, aggregate them correctly
-#     for col in ['emotion_mean', 'au_mean', 'au_max', 'au_std']:
-#         # Apply a function to each group
-#         # The function concatenates all Series in the group and then calculates the mean
-#         avg[col] = grouped[col].apply(lambda s: pd.concat(list(s)).groupby(level=0).mean())
-
-#     return avg
 
 def load_and_print_from_csv(emogene_csv_path, genefacepp_csv_path):
     """
@@ -379,18 +394,18 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
+    main()
     
     # just run from existing CSV files
     
-    # --- OPTION 2: Load from existing CSV files and print results ---
-    emogene_file = f'{SAVE_FIG_BASE_DIR}/results_emogene_RAVDESS_May_raw.csv'
-    genefacepp_file = f'{SAVE_FIG_BASE_DIR}/results_genefacepp_RAVDESS_May_raw.csv'
+    # # --- OPTION 2: Load from existing CSV files and print results ---
+    # emogene_file = f'{SAVE_FIG_BASE_DIR}/results_emogene_RAVDESS_May_raw.csv'
+    # genefacepp_file = f'{SAVE_FIG_BASE_DIR}/results_genefacepp_RAVDESS_May_raw.csv'
     
-    if os.path.exists(emogene_file) and os.path.exists(genefacepp_file):
-        load_and_print_from_csv(emogene_file, genefacepp_file)
-    else:
-        print("CSV files not found. Please run with 'run_full_detection = True' first.")
+    # if os.path.exists(emogene_file) and os.path.exists(genefacepp_file):
+    #     load_and_print_from_csv(emogene_file, genefacepp_file)
+    # else:
+    #     print("CSV files not found. Please run with 'run_full_detection = True' first.")
     
     
     
@@ -412,3 +427,4 @@ if __name__ == '__main__':
 # ----------------------------variability---------------------------
 # genefacepp emotion key AUs std   |    |      |    |    |      |    |    |    |       |    |    |    |    |    |     |      |    |      |    |    |    |      |
 # emogene emotion key AUs std      |    |      |    |    |      |    |    |    |       |    |    |    |    |    |     |      |    |      |    |    |    |      |
+

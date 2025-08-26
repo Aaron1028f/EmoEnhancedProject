@@ -9,6 +9,7 @@
 !*.md
 !*.txt
 !*.html
+!*.csv
 
 # 不要忽略 .gitignore 檔案本身
 !.gitignore

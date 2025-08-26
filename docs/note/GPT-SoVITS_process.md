@@ -26,4 +26,4 @@ SoVITS: `SoVITS_weights_v2ProPlus/Feng_EP32_01_e25_s150.pth` # 主要是這個�
 目前使用的資料集: https://www.youtube.com/watch?v=-xFxeotJLnQ&list=PLDxCClQ3DiNsqKjdyCFj9qY102L4sHobe&index=1
 約只有16分鐘，所以效果普通
 
-後續可能需要只少1小時的訓練資料來訓練，以獲得較好的結果
+後續可能需要至少1小時的訓練資料來訓練，以獲得較好的結果
