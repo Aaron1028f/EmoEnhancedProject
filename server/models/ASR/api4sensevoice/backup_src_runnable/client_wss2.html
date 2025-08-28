@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>WebSocket Audio Transcription</title>
+    <style>
+        #transcriptionResult {
+            white-space: pre-wrap; /* Preserve whitespace and line breaks */
+            background-color: #f5f5f5;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        #recordButton.recording {
+            background-color: red;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <button id="recordButton">Start Recording</button>
+        <label>
+            language: 
+            <input id="lang" type="text" value="auto" />
+        </label>
+        <label>
+            <input type="checkbox" id="speakerVerification"> Speaker Verification
+        </label>
+        <hr />
+        Transcription result will be displayed below:
+        <p id="transcriptionResult"></p>
+
+        <!-- ... 其他 UI 元件 ... -->
+        <hr />
+        ASR Result:
+        <p id="asrResult" style="color: blue;"></p>
+        LLM Response:
+        <p id="llmResult" style="color: green;"></p>
+
+    </div>
+</body>
+<script>
+    var recordButton = document.getElementById('recordButton');
+
+    var asrResultP = document.getElementById('asrResult'); // ASR 結果顯示區
+    var llmResultP = document.getElementById('llmResult'); // LLM 結果顯示區
+
+    var transcriptionResult = document.getElementById('transcriptionResult');
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
+    var ws = null;
+    var record = null;
+    var timeInte = null;
+    var isRecording = false;
+
+    // --- 新增音訊播放佇列和相關變數 ---
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let audioQueue = [];
+    let isPlaying = false;
+    let nextStartTime = 0;
+    let audioHeader = null; // 用來儲存 WAV 檔案頭
+
+    function playAudioQueue() {
+        if (isPlaying || audioQueue.length === 0 || !audioHeader) {
+            // 如果正在播放，或佇列為空，或還沒有收到標頭，就直接返回
+            return;
+        }
+        isPlaying = true;
+
+        const audioData = audioQueue.shift(); // 取出佇列中的第一個音訊塊
+        
+        // Base64 解碼
+        const binaryString = window.atob(audioData);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        // 建立一個新的 ArrayBuffer，手動將標頭和當前的音訊塊合併
+        const combined = new Uint8Array(audioHeader.length + bytes.length);
+        combined.set(audioHeader);
+        combined.set(bytes, audioHeader.length);
+        
+        audioContext.decodeAudioData(combined.buffer, (buffer) => {
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            
+            const currentTime = audioContext.currentTime;
+            const startTime = Math.max(currentTime, nextStartTime);
+            
+            source.start(startTime);
+            
+            // 更新下一個音訊塊的預計開始時間
+            // 注意：這裡的 buffer.duration 是包含標頭長度的音訊的時長，
+            // 我們需要減去一個極小值來估算真實音訊的時長，或者找到更精確的方法。
+            // 為了流暢播放，我們只使用真實音訊塊的時長估算。
+            // 假設伺服器傳送的 chunk 大小固定，可以估算一個固定時長。
+            // 這裡我們用一個簡化的方式：buffer.duration 減去一個小偏移。
+            const headerDurationApproximation = 0.001; // 標頭本身不佔用播放時間
+            const chunkDuration = buffer.duration > headerDurationApproximation ? buffer.duration - headerDurationApproximation : 0;
+            nextStartTime = startTime + chunkDuration;
+
+            source.onended = () => {
+                isPlaying = false;
+                playAudioQueue(); // 當前塊播放完畢，立即檢查並播放下一個
+            };
+        }, (error) => {
+            console.error('Error decoding audio data', error);
+            isPlaying = false;
+            playAudioQueue(); // 解碼失敗，嘗試播放下一個
+        });
+    }
+
+    recordButton.onclick = function() {
+        if (!isRecording) {
+            startRecording();
+        } else {
+            stopRecording();
+        }
+    };
+
+    function startRecording() {
+        console.log('Start Recording');
+        // --- 新增這一行，以應對瀏覽器的自動播放策略 ---
+        // 確保 AudioContext 在使用者點擊後處於 "running" 狀態。
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        // --- 新增結束 ---
+        var speakerVerificationCheckbox = document.getElementById('speakerVerification');
+        var sv = speakerVerificationCheckbox.checked ? 1 : 0;
+        var lang = document.getElementById("lang").value
+        // Construct the query parameters
+        var queryParams = [];
+        if (lang) {
+            queryParams.push(`lang=${lang}`);
+        }
+        if (sv) {
+            queryParams.push('sv=1');
+        }
+        var queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+
+        
+        // ws = new WebSocket(`wss://your_wss_server_address/ws/transcribe${queryString}`);
+        var wss_server_address = 'localhost:27000';
+        ws = new WebSocket(`ws://${wss_server_address}/ws/transcribe${queryString}`);
+
+        ws.binaryType = 'arraybuffer';
+
+        ws.onopen = function(event) {
+            console.log('WebSocket connection established');
+            record.start();
+            timeInte = setInterval(function() {
+                if(ws.readyState === 1) {
+                    var audioBlob = record.getBlob();
+                    console.log('Blob size: ', audioBlob.size);
+
+                    // Read the Blob content for debugging
+                    var reader = new FileReader();
+                    reader.onloadend = function() {
+                        console.log('Blob content: ', new Uint8Array(reader.result));
+                        ws.send(audioBlob);
+                        console.log('Sending audio data');
+                        record.clear();
+                    };
+                    reader.readAsArrayBuffer(audioBlob);
+                }
+            }, 500);
+        };
+
+        // 清空上次的結果
+        asrResultP.textContent = "";
+        llmResultP.textContent = "";        
+
+        // 清空音訊佇列
+        audioQueue = [];
+        isPlaying = false;
+        nextStartTime = 0;
+        audioHeader = null;
+
+        ws.onmessage = function(evt) {
+            console.log('Received message: ' + evt.data);
+            try {
+                const message = JSON.parse(evt.data);
+
+                switch (message.type) {
+                    case 'asr_result':
+                        asrResultP.textContent = message.payload;
+                        llmResultP.textContent = ""; 
+                        break;
+                    case 'llm_chunk':
+                        llmResultP.textContent += message.payload;
+                        break;
+                    
+                    case 'tts_audio_chunk':
+                        // --- 重新設計的 tts_audio_chunk 處理邏輯 ---
+                        const payloadData = message.payload;
+                        const binaryString = window.atob(payloadData);
+                        const bytes = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+
+                        // 檢查這是否是第一個區塊（包含 'RIFF' 標記）
+                        if (bytes.length === 44 && new TextDecoder().decode(bytes.slice(0,4)) === 'RIFF') {
+                            console.log("Received WAV header.");
+                            audioHeader = bytes; // 儲存標頭
+                            // 收到標頭後，嘗試播放佇列中可能已存在的資料
+                            playAudioQueue();
+                        } else if (audioHeader) {
+                            // 如果已經有標頭了，這就是一個純音訊塊
+                            audioQueue.push(payloadData);
+                            playAudioQueue();
+                        } else {
+                            // 還沒收到標頭，但這又不是標頭，先存起來
+                            console.warn("Received audio data before header, queueing it.");
+                            audioQueue.push(payloadData);
+
+                        }
+                        break;
+
+                    case 'error':
+                        console.error('Server error:', message.payload);
+                        llmResultP.textContent = `Error: ${message.payload}`;
+                        break;
+                    default:
+                        if (message.code === 2 && message.info === "detect speaker") {
+                             console.log("Speaker detected:", message.data);
+                        } else {
+                             console.warn('Unknown message type:', message.type || message);
+                        }
+                }
+            } catch (e) {
+                console.error('Failed to parse or process message', e);
+            }
+
+            // console.log('Received message: ' + evt.data);
+            // try {
+            //    resJson = JSON.parse(evt.data)
+            //    if (resJson.code == 0) {
+            //        var jsonResponse = JSON.stringify(resJson, null, 4);
+            //        transcriptionResult.textContent += "\n" + (resJson.data || 'No speech recognized');
+            //    }
+            // } catch (e) {
+            //     console.error('Failed to parse response data', e);
+            //     transcriptionResult.textContent += "\n" + evt.data;
+            // }
+        };
+
+        ws.onclose = function() {
+            console.log('WebSocket connection closed');
+        };
+
+        ws.onerror = function(error) {
+            console.error('WebSocket error: ' + error);
+        };
+
+        recordButton.textContent = "Stop Recording";
+        recordButton.classList.add("recording");
+        isRecording = true;
+    }
+
+    function stopRecording() {
+        console.log('Stop Recording');
+        if (ws) {
+            ws.close();
+            record.stop();
+            clearInterval(timeInte);
+        }
+        recordButton.textContent = "Start Recording";
+        recordButton.classList.remove("recording");
+        isRecording = false;
+    }
+
+    function init(rec) {
+        record = rec;
+    }
+
+    if (!navigator.getUserMedia) {
+        alert('Your browser does not support audio input');
+    } else {
+        navigator.getUserMedia(
+            { audio: true },
+            function(mediaStream) {
+                init(new Recorder(mediaStream));
+            },
+            function(error) {
+                console.log(error);
+            }
+        );
+    }
+
+    var Recorder = function(stream) {
+        var sampleBits = 16; // Sample bits
+        // var inputSampleRate = 48000; // Input sample rate
+        var context = new AudioContext();
+        var inputSampleRate = context.sampleRate;
+        console.log('Actual input sample rate: ' + inputSampleRate);
+
+
+        var outputSampleRate = 16000; // Output sample rate
+        var channelCount = 1; // Single channel
+        // var context = new AudioContext();
+
+
+        var audioInput = context.createMediaStreamSource(stream);
+        var recorder = context.createScriptProcessor(4096, channelCount, channelCount);
+        var audioData = {
+            size: 0,
+            buffer: [],
+            inputSampleRate: inputSampleRate,
+            inputSampleBits: sampleBits,
+            clear: function() {
+                this.buffer = [];
+                this.size = 0;
+            },
+            input: function(data) {
+                this.buffer.push(new Float32Array(data));
+                this.size += data.length;
+            },
+            encodePCM: function() {
+                var bytes = new Float32Array(this.size);
+                var offset = 0;
+                for (var i = 0; i < this.buffer.length; i++) {
+                    bytes.set(this.buffer[i], offset);
+                    offset += this.buffer[i].length;
+                }
+                var dataLength = bytes.length * (sampleBits / 8);
+                var buffer = new ArrayBuffer(dataLength);
+                var data = new DataView(buffer);
+                offset = 0;
+                for (var i = 0; i < bytes.length; i++, offset += 2) {
+                    var s = Math.max(-1, Math.min(1, bytes[i]));
+                    data.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+                }
+                return new Blob([data], { type: 'audio/pcm' });
+            }
+        };
+
+        this.start = function() {
+            audioInput.connect(recorder);
+            recorder.connect(context.destination);
+        };
+
+        this.stop = function() {
+            recorder.disconnect();
+        };
+
+        this.getBlob = function() {
+            return audioData.encodePCM();
+        };
+
+        this.clear = function() {
+            audioData.clear();
+        };
+
+        function downsampleBuffer(buffer, inputSampleRate, outputSampleRate) {
+            if (outputSampleRate === inputSampleRate) {
+                return buffer;
+            }
+            var sampleRateRatio = inputSampleRate / outputSampleRate;
+            var newLength = Math.round(buffer.length / sampleRateRatio);
+            var result = new Float32Array(newLength);
+            var offsetResult = 0;
+            var offsetBuffer = 0;
+            while (offsetResult < result.length) {
+                var nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
+                var accum = 0, count = 0;
+                for (var i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+                    accum += buffer[i];
+                    count++;
+                }
+                result[offsetResult] = accum / count;
+                offsetResult++;
+                offsetBuffer = nextOffsetBuffer;
+            }
+            return result;
+        }
+
+        recorder.onaudioprocess = function(e) {
+            console.log('onaudioprocess called');
+            var resampledData = downsampleBuffer(e.inputBuffer.getChannelData(0), inputSampleRate, outputSampleRate);
+            audioData.input(resampledData);
+        };
+    };
+
+</script>
+</html>

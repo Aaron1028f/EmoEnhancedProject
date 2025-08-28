@@ -23,6 +23,7 @@ import time
 
 import httpx
 import asyncio
+import base64
 
 # 簡體轉繁體
 from opencc import OpenCC
@@ -277,30 +278,120 @@ async def custom_exception_handler(request: Request, exc: Exception):
         ).model_dump()
     )
     
-# --- 新增一個函式，專門用來呼叫 LLM API ---
-async def get_llm_response_stream(text: str, websocket: WebSocket):
-    """呼叫 roleplay_api 並將 LLM 的回應即時串流回客戶端"""
-    # 假設 roleplay_api.py 運行在 localhost:8000
+# # --- 新增一個函式，專門用來呼叫 LLM API ---
+# async def get_llm_response_stream(text: str, websocket: WebSocket):
+#     """呼叫 roleplay_api 並將 LLM 的回應即時串流回客戶端"""
+#     # 假設 roleplay_api.py 運行在 localhost:8000
+#     llm_api_url = "http://localhost:28000/streaming_response"
+#     try:
+#         async with httpx.AsyncClient() as client:
+#             async with client.stream("GET", llm_api_url, params={"user_input": text}, timeout=60) as response:
+#                 # 檢查 API 呼叫是否成功
+#                 if response.status_code != 200:
+#                     error_payload = {"type": "error", "payload": f"LLM API Error: {response.status_code}"}
+#                     await websocket.send_json(error_payload)
+#                     return
+
+#                 # 將收到的 LLM 文字流，包裝成我們的格式，再轉發給客戶端
+#                 async for chunk in response.aiter_text():
+#                     if chunk:
+#                         llm_chunk_payload = {"type": "llm_chunk", "payload": chunk}
+#                         await websocket.send_json(llm_chunk_payload)
+#     except httpx.RequestError as e:
+#         error_payload = {"type": "error", "payload": f"Could not connect to LLM API: {e}"}
+#         await websocket.send_json(error_payload)    
+        
+# --- 新增一個函式，專門用來呼叫 TTS API 並串流音訊 ---
+async def get_tts_audio_stream(text: str, websocket: WebSocket):
+    """呼叫 TTS API (api_v2.py) 並將音訊串流回客戶端"""
+    # 根據 api_v2.py 的文件設定參數
+    REF_AUDIO_PATH = '/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0004170880_0004326720.wav'
+    tts_api_url = "http://127.0.0.1:9880/tts"
+    params = {
+        "text": text,
+        "text_lang": "zh",  # 假設 LLM 回覆是中文
+        "ref_audio_path": REF_AUDIO_PATH, # 您需要提供一個參考音色
+        "prompt_lang": "zh",
+        "streaming_mode": True,
+        "media_type": "wav", # 串流時建議用 wav 或 raw
+        "parallel_infer": False
+    }
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            async with client.stream("GET", tts_api_url, params=params, timeout=60) as response:
+                if response.status_code != 200:
+                    logger.error(f"TTS API Error: {response.status_code} - {await response.aread()}")
+                    return
+
+                # 接收音訊塊，用 Base64 編碼後轉發
+                async for audio_chunk in response.aiter_bytes():
+                    if audio_chunk:
+                        # 將原始二進位音訊塊用 Base64 編碼成字串
+                        encoded_audio = base64.b64encode(audio_chunk).decode('utf-8')
+                        tts_payload = {"type": "tts_audio_chunk", "payload": encoded_audio}
+                        await websocket.send_json(tts_payload)
+    except httpx.RequestError as e:
+        logger.error(f"Could not connect to TTS API: {e}")
+        error_payload = {"type": "error", "payload": f"Could not connect to TTS API: {e}"}
+        await websocket.send_json(error_payload)
+
+
+# --- 重新設計主流程函式，整合 LLM 和 TTS ---
+async def run_llm_and_tts_pipeline(text: str, websocket: WebSocket):
+    """
+    呼叫 LLM API，將其文字流轉發給客戶端，同時湊成句子送去 TTS API 合成語音。
+    """
     llm_api_url = "http://localhost:28000/streaming_response"
+    sentence_buffer = ""
+    # 定義句子的結束符號
+    sentence_enders = {"。", "！", "？", "...", "，"}
+
     try:
         async with httpx.AsyncClient() as client:
             async with client.stream("GET", llm_api_url, params={"user_input": text}, timeout=60) as response:
-                # 檢查 API 呼叫是否成功
                 if response.status_code != 200:
                     error_payload = {"type": "error", "payload": f"LLM API Error: {response.status_code}"}
                     await websocket.send_json(error_payload)
                     return
 
-                # 將收到的 LLM 文字流，包裝成我們的格式，再轉發給客戶端
-                async for chunk in response.aiter_text():
-                    if chunk:
-                        llm_chunk_payload = {"type": "llm_chunk", "payload": chunk}
-                        await websocket.send_json(llm_chunk_payload)
+                async for llm_chunk in response.aiter_text():
+                    if llm_chunk:
+                        # 1. 立即將文字塊轉發給客戶端顯示
+                        llm_payload = {"type": "llm_chunk", "payload": llm_chunk}
+                        await websocket.send_json(llm_payload)
+
+                        # 2. 將文字塊加入句子緩衝區
+                        sentence_buffer += llm_chunk
+
+                        # 3. 檢查緩衝區中是否有完整的句子
+                        while any(ender in sentence_buffer for ender in sentence_enders):
+                            first_ender_pos = -1
+                            first_ender = ''
+                            for ender in sentence_enders:
+                                pos = sentence_buffer.find(ender)
+                                if pos != -1 and (first_ender_pos == -1 or pos < first_ender_pos):
+                                    first_ender_pos = pos
+                                    first_ender = ender
+                            
+                            if first_ender_pos != -1:
+                                # 提取一個完整的句子
+                                sentence_to_speak = sentence_buffer[:first_ender_pos + len(first_ender)]
+                                # 從緩衝區移除已提取的句子
+                                sentence_buffer = sentence_buffer[first_ender_pos + len(first_ender):]
+                                
+                                # 4. 將完整句子送去 TTS 合成 (在背景任務中執行)
+                                logger.info(f"Sending to TTS: {sentence_to_speak}")
+                                asyncio.create_task(get_tts_audio_stream(sentence_to_speak, websocket))
+
+                # 處理最後剩餘的文字 (如果有的話)
+                if sentence_buffer.strip():
+                    logger.info(f"Sending final part to TTS: {sentence_buffer}")
+                    asyncio.create_task(get_tts_audio_stream(sentence_buffer, websocket))
+
     except httpx.RequestError as e:
         error_payload = {"type": "error", "payload": f"Could not connect to LLM API: {e}"}
-        await websocket.send_json(error_payload)    
-        
-        
+        await websocket.send_json(error_payload)        
 
 # Define the response model
 class TranscriptionResponse(BaseModel):
@@ -410,7 +501,8 @@ async def websocket_endpoint(websocket: WebSocket):
                                 # ==
                                 
                                 # await get_llm_response_stream(traditional_text, websocket)
-                                asyncio.create_task(get_llm_response_stream(traditional_text, websocket))
+                                # asyncio.create_task(get_llm_response_stream(traditional_text, websocket))
+                                asyncio.create_task(run_llm_and_tts_pipeline(traditional_text, websocket))
                                 
                                 # (未來擴展) 4. 在這裡可以加入呼叫 TTS 的邏輯
                                 # tts_audio = await get_tts_audio(llm_full_response)

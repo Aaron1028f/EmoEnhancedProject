@@ -27,3 +27,14 @@ SoVITS: `SoVITS_weights_v2ProPlus/Feng_EP32_01_e25_s150.pth` # 主要是這個�
 約只有16分鐘，所以效果普通
 
 後續可能需要至少1小時的訓練資料來訓練，以獲得較好的結果
+
+### api usage
+使用 `api_v2.py`
+到`server/models/TTS/GPT-SoVITS/GPT_SoVITS/configs/tts_infer.yaml`裡面去改模型配置
+直接改custom的部分就行了
+
+```bash
+conda activate GPTSoVits
+cd server/models/TTS/GPT-SoVITS/
+python api_v2.py -a 127.0.0.1 -p 9880 -c GPT_SoVITS/configs/tts_infer.yaml
+```

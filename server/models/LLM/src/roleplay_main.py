@@ -22,8 +22,8 @@ from langchain_community.vectorstores import FAISS
 
 # =================================================================================================
 # --- 全域設定 ---
-LLM_PROVIDER = "gemini" # this one is free to use, "openai" is also available
-# LLM_PROVIDER = "openai"  # 可選 "openai" 或 "gemini"
+# LLM_PROVIDER = "gemini" # this one is free to use, "openai" is also available
+LLM_PROVIDER = "openai"  # 可選 "openai" 或 "gemini"
 GEMINI_MODEL_NAME = "gemini-2.5-flash"
 # GEMINI_MODEL_NAME = "gemini-2.5-flash-lite-preview-06-17"
 CHATGPT_MODEL_NAME = "gpt-4.1-mini" # "gpt-4.1-mini" is also good for fast response
@@ -54,21 +54,23 @@ SYSTEM_PROMPT_TEMPLATE = f"""
 說話要簡潔，避免過於正式或客套。
 你的所有回答都應參考角色描述，並基於 {ROLE_NAME} 的說話風格（例如：情緒表達方式、說話習慣等等）。
 
-## 為每句話加上情緒標籤
-在回答問題時，請在每句話的前後的加上情緒標籤，情緒標籤的要依照說話的情緒與上下文關係來選擇，能夠使用的情緒標籤包含以下7種：
-<neutral>與</neutral> 表示中立情緒，
-<happy>與</happy> 表示快樂情緒，
-<sad>與</sad> 表示悲傷情緒，
-<angry>與</angry> 表示憤怒情緒，
-<surprised>與</surprised> 表示困惑情緒，
-<disgusted>與</disgusted> 表示厭惡情緒，
-<fearful>與</fearful> 表示恐懼情緒。
-
 ## 你的任務
 接下來，使用者會提供一些「相關記憶」和一個「當前問題」。
 你的任務是消化這些記憶，並嚴格以你的人格身份，對「當前問題」做出回應。
 
 """
+# 以下部分可以放在 ## 你的任務前面
+
+# ## 為每句話加上情緒標籤
+# 在回答問題時，請在每句話的前後的加上情緒標籤，情緒標籤的要依照說話的情緒與上下文關係來選擇，能夠使用的情緒標籤包含以下7種：
+# <neutral>與</neutral> 表示中立情緒，
+# <happy>與</happy> 表示快樂情緒，
+# <sad>與</sad> 表示悲傷情緒，
+# <angry>與</angry> 表示憤怒情緒，
+# <surprised>與</surprised> 表示困惑情緒，
+# <disgusted>與</disgusted> 表示厭惡情緒，
+# <fearful>與</fearful> 表示恐懼情緒。
+
 # # 注意: 回答需要在100字以內，並且要簡潔明瞭。
 
 COT_SYSTEM_PROMPT_TEMPLATE = f"""
