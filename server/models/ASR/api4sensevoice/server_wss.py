@@ -299,8 +299,6 @@ async def get_llm_response_stream(text: str, websocket: WebSocket):
     except httpx.RequestError as e:
         error_payload = {"type": "error", "payload": f"Could not connect to LLM API: {e}"}
         await websocket.send_json(error_payload)    
-        
-        
 
 # Define the response model
 class TranscriptionResponse(BaseModel):

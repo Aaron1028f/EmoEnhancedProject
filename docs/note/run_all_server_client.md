@@ -14,7 +14,8 @@ python roleplay_api.py
 # run TTS server (GPT-SoVits)
 conda activate GPTSoVits
 cd server/models/TTS/GPT-SoVITS/
-python api_v2_server.py -a 127.0.0.1 -p 9880 -c GPT_SoVITS/configs/tts_infer.yaml
+python api_v2.py
+# python api_v2.py -a 127.0.0.1 -p 9880 -c GPT_SoVITS/configs/tts_infer.yaml
 
 ```
 

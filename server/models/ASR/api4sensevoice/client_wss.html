@@ -4,14 +4,17 @@
     <meta charset="utf-8">
     <title>WebSocket Audio Transcription</title>
     <style>
+
+        /*
         #transcriptionResult {
-            white-space: pre-wrap; /* Preserve whitespace and line breaks */
+            white-space: pre-wrap; // Preserve whitespace and line breaks 
             background-color: #f5f5f5;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
             font-family: monospace;
         }
+        */
         #recordButton.recording {
             background-color: red;
             color: white;
@@ -28,16 +31,16 @@
         <label>
             <input type="checkbox" id="speakerVerification"> Speaker Verification
         </label>
-        <hr />
-        Transcription result will be displayed below:
-        <p id="transcriptionResult"></p>
+        <!-- <hr /> -->
+        <!-- Transcription result will be displayed below: -->
+        <!-- <p id="transcriptionResult"></p> -->
 
         <!-- ... 其他 UI 元件 ... -->
         <hr />
-        ASR Result:
-        <p id="asrResult" style="color: blue;"></p>
-        LLM Response:
-        <p id="llmResult" style="color: green;"></p>
+        <b>ASR Result:</b>
+        <p id="asrResult" style="color: rgb(2, 2, 120);" ></p>
+        <b>LLM Response:</b>
+        <p id="llmResult" style="color: rgb(0, 0, 0);"></p>
 
     </div>
 </body>

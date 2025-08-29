@@ -72,3 +72,9 @@ pip install pydantic-settings==2.9.1
 # ModuleNotFoundError: No module named 'soxr'
 pip install soxr
 ```
+
+
+### other
+```bash
+pip install --upgrade gradio
+```

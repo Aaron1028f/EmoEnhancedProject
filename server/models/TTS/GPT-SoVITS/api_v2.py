@@ -146,6 +146,16 @@ tts_pipeline = TTS(tts_config)
 
 APP = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+# ↓↓↓ 將這段程式碼加到您的 api_v2.py 中 ↓↓↓
+APP.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 允許所有來源
+    allow_credentials=True,
+    allow_methods=["*"],  # 允許所有 HTTP 方法
+    allow_headers=["*"],  # 允許所有 HTTP 標頭
+)
+# ↑↑↑ 將這段程式碼加到您的 api_v2.py 中 ↑↑↑
 
 class TTS_Request(BaseModel):
     text: str = None
@@ -189,6 +199,34 @@ def pack_wav(io_buffer: BytesIO, data: np.ndarray, rate: int):
     sf.write(io_buffer, data, rate, format="wav")
     return io_buffer
 
+def pack_webm(io_buffer: BytesIO, data: np.ndarray, rate: int):
+    process = subprocess.Popen(
+        [
+            "ffmpeg",
+            "-f",
+            "s16le",  # 輸入 16 位元有符號小端整數 PCM
+            "-ar",
+            str(rate),  # 設定取樣率
+            "-ac",
+            "1",  # 單聲道
+            "-i",
+            "pipe:0",  # 從管道讀取輸入
+            "-c:a",
+            "libopus",  # 音訊編碼器為 Opus
+            "-b:a",
+            "128k",  # 位元率
+            "-vn",  # 不包含視訊
+            "-f",
+            "webm",  # 輸出 WebM 容器格式
+            "pipe:1",  # 將輸出寫入管道
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    out, _ = process.communicate(input=data.tobytes())
+    io_buffer.write(out)
+    return io_buffer
 
 def pack_aac(io_buffer: BytesIO, data: np.ndarray, rate: int):
     process = subprocess.Popen(
@@ -225,6 +263,8 @@ def pack_audio(io_buffer: BytesIO, data: np.ndarray, rate: int, media_type: str)
         io_buffer = pack_ogg(io_buffer, data, rate)
     elif media_type == "aac":
         io_buffer = pack_aac(io_buffer, data, rate)
+    elif media_type == "webm":
+        io_buffer = pack_webm(io_buffer, data, rate)
     elif media_type == "wav":
         io_buffer = pack_wav(io_buffer, data, rate)
     else:
@@ -284,7 +324,7 @@ def check_params(req: dict):
             status_code=400,
             content={"message": f"prompt_lang: {prompt_lang} is not supported in version {tts_config.version}"},
         )
-    if media_type not in ["wav", "raw", "ogg", "aac"]:
+    if media_type not in ["wav", "raw", "ogg", "aac", "webm"]:
         return JSONResponse(status_code=400, content={"message": f"media_type: {media_type} is not supported"})
     elif media_type == "ogg" and not streaming_mode:
         return JSONResponse(status_code=400, content={"message": "ogg format is not supported in non-streaming mode"})
