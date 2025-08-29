@@ -1,0 +1,366 @@
+{
+    "eyeBlinkLeft": {
+        "target_shapes": [
+            "eyeBlinkLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Eyelids"
+    },
+    "eyeLookDownLeft": {
+        "target_shapes": [
+            "eyeLookDownLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Eyes"
+    },
+    "eyeLookInLeft": {
+        "target_shapes": [
+            "eyeLookInLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Eyes"
+    },
+    "eyeLookOutLeft": {
+        "target_shapes": [
+            "eyeLookOutLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Eyes"
+    },
+    "eyeLookUpLeft": {
+        "target_shapes": [
+            "eyeLookUpLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Eyes"
+    },
+    "eyeSquintLeft": {
+        "target_shapes": [
+            "eyeSquintLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Eyelids"
+    },
+    "eyeWideLeft": {
+        "target_shapes": [
+            "eyeWideLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Eyelids"
+    },
+    "eyeBlinkRight": {
+        "target_shapes": [
+            "eyeBlinkRight"
+        ],
+        "amplify": 1.0,
+        "region": "Eyelids"
+    },
+    "eyeLookDownRight": {
+        "target_shapes": [
+            "eyeLookDownRight"
+        ],
+        "amplify": 1.0,
+        "region": "Eyes"
+    },
+    "eyeLookInRight": {
+        "target_shapes": [
+            "eyeLookInRight"
+        ],
+        "amplify": 1.0,
+        "region": "Eyes"
+    },
+    "eyeLookOutRight": {
+        "target_shapes": [
+            "eyeLookOutRight"
+        ],
+        "amplify": 1.0,
+        "region": "Eyes"
+    },
+    "eyeLookUpRight": {
+        "target_shapes": [
+            "eyeLookUpRight"
+        ],
+        "amplify": 1.0,
+        "region": "Eyes"
+    },
+    "eyeSquintRight": {
+        "target_shapes": [
+            "eyeSquintRight"
+        ],
+        "amplify": 1.0,
+        "region": "Eyelids"
+    },
+    "eyeWideRight": {
+        "target_shapes": [
+            "eyeWideRight"
+        ],
+        "amplify": 1.0,
+        "region": "Eyelids"
+    },
+    "jawForward": {
+        "target_shapes": [
+            "jawForward"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "jawLeft": {
+        "target_shapes": [
+            "jawLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "jawRight": {
+        "target_shapes": [
+            "jawRight"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "jawOpen": {
+        "target_shapes": [
+            "jawOpen"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthClose": {
+        "target_shapes": [
+            "mouthClose"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthFunnel": {
+        "target_shapes": [
+            "mouthFunnel"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthPucker": {
+        "target_shapes": [
+            "mouthPucker"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthRight": {
+        "target_shapes": [
+            "mouthRight"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthLeft": {
+        "target_shapes": [
+            "mouthLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthSmileLeft": {
+        "target_shapes": [
+            "mouthSmileLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthSmileRight": {
+        "target_shapes": [
+            "mouthSmileRight"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthFrownRight": {
+        "target_shapes": [
+            "mouthFrownRight"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthFrownLeft": {
+        "target_shapes": [
+            "mouthFrownLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthDimpleLeft": {
+        "target_shapes": [
+            "mouthDimpleLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthDimpleRight": {
+        "target_shapes": [
+            "mouthDimpleRight"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthStretchLeft": {
+        "target_shapes": [
+            "mouthStretchLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthStretchRight": {
+        "target_shapes": [
+            "mouthStretchRight"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthRollLower": {
+        "target_shapes": [
+            "mouthRollLower"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthRollUpper": {
+        "target_shapes": [
+            "mouthRollUpper"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthShrugLower": {
+        "target_shapes": [
+            "mouthShrugLower"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthShrugUpper": {
+        "target_shapes": [
+            "mouthShrugUpper"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthPressLeft": {
+        "target_shapes": [
+            "mouthPressLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthPressRight": {
+        "target_shapes": [
+            "mouthPressRight"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthLowerDownLeft": {
+        "target_shapes": [
+            "mouthLowerDownLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthLowerDownRight": {
+        "target_shapes": [
+            "mouthLowerDownRight"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthUpperUpLeft": {
+        "target_shapes": [
+            "mouthUpperUpLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "mouthUpperUpRight": {
+        "target_shapes": [
+            "mouthUpperUpRight"
+        ],
+        "amplify": 1.0,
+        "region": "Mouth"
+    },
+    "browDownLeft": {
+        "target_shapes": [
+            "browDownLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Brows"
+    },
+    "browDownRight": {
+        "target_shapes": [
+            "browDownRight"
+        ],
+        "amplify": 1.0,
+        "region": "Brows"
+    },
+    "browInnerUp": {
+        "target_shapes": [
+            "browInnerUp"
+        ],
+        "amplify": 1.0,
+        "region": "Brows"
+    },
+    "browOuterUpLeft": {
+        "target_shapes": [
+            "browOuterUpLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Brows"
+    },
+    "browOuterUpRight": {
+        "target_shapes": [
+            "browOuterUpRight"
+        ],
+        "amplify": 1.0,
+        "region": "Brows"
+    },
+    "cheekPuff": {
+        "target_shapes": [
+            "cheekPuff"
+        ],
+        "amplify": 1.0,
+        "region": "Cheeks"
+    },
+    "cheekSquintLeft": {
+        "target_shapes": [
+            "cheekSquintLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Cheeks"
+    },
+    "cheekSquintRight": {
+        "target_shapes": [
+            "cheekSquintRight"
+        ],
+        "amplify": 1.0,
+        "region": "Cheeks"
+    },
+    "noseSneerLeft": {
+        "target_shapes": [
+            "noseSneerLeft"
+        ],
+        "amplify": 1.0,
+        "region": "Nose"
+    },
+    "noseSneerRight": {
+        "target_shapes": [
+            "noseSneerRight"
+        ],
+        "amplify": 1.0,
+        "region": "Nose"
+    },
+    "tongueOut": {
+        "target_shapes": [
+            "tongueOut"
+        ],
+        "amplify": 1.0,
+        "region": "Tongue"
+    }
+}

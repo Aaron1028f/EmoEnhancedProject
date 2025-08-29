@@ -1,0 +1,5 @@
+{
+  "name": "Streaming TTS Web App",
+  "description": "A web application to convert text to speech using a streaming API. Enter text in Chinese, click generate, and listen to the synthesized audio.",
+  "requestFramePermissions": []
+}

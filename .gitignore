@@ -8,8 +8,12 @@
 !*.py
 !*.md
 !*.txt
+
 !*.html
+!*.tsx
+
 !*.csv
+!*.json
 
 # 不要忽略 .gitignore 檔案本身
 !.gitignore
