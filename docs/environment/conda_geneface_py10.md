@@ -77,4 +77,11 @@ pip install soxr
 ### other
 ```bash
 pip install --upgrade gradio
+
+# other 
+# numpy==1.26.0
+# numba==0.61.2
+# livekit==1.0.12
+# livekit-api==1.0.5
+
 ```

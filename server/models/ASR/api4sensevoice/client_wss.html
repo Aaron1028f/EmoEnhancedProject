@@ -56,17 +56,24 @@
     var record = null;
     var timeInte = null;
     var isRecording = false;
+    var isConnected = false;
 
     recordButton.onclick = function() {
-        if (!isRecording) {
+        if (!isConnected) {
+            alert("WebSocket is not connected. Please wait or refresh the page.");
+            return;
+        } 
+        
+        if (!isRecording){
             startRecording();
-        } else {
+        }
+        else {
             stopRecording();
         }
     };
 
-    function startRecording() {
-        console.log('Start Recording');
+    function connectWebSocket() {
+        console.log('Attempting to connect WebSocket...');
         var speakerVerificationCheckbox = document.getElementById('speakerVerification');
         var sv = speakerVerificationCheckbox.checked ? 1 : 0;
         var lang = document.getElementById("lang").value
@@ -80,37 +87,15 @@
         }
         var queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
 
-        
-        // ws = new WebSocket(`wss://your_wss_server_address/ws/transcribe${queryString}`);
         var wss_server_address = 'localhost:27000';
         ws = new WebSocket(`ws://${wss_server_address}/ws/transcribe${queryString}`);
-
         ws.binaryType = 'arraybuffer';
 
         ws.onopen = function(event) {
             console.log('WebSocket connection established');
-            record.start();
-            timeInte = setInterval(function() {
-                if(ws.readyState === 1) {
-                    var audioBlob = record.getBlob();
-                    console.log('Blob size: ', audioBlob.size);
-
-                    // Read the Blob content for debugging
-                    var reader = new FileReader();
-                    reader.onloadend = function() {
-                        console.log('Blob content: ', new Uint8Array(reader.result));
-                        ws.send(audioBlob);
-                        console.log('Sending audio data');
-                        record.clear();
-                    };
-                    reader.readAsArrayBuffer(audioBlob);
-                }
-            }, 500);
+            isConnected = true;
+            recordButton.disabled = false; // Enable the button once connected
         };
-
-        // 清空上次的結果
-        asrResultP.textContent = "";
-        llmResultP.textContent = "";        
 
         ws.onmessage = function(evt) {
             console.log('Received message: ' + evt.data);
@@ -146,27 +131,39 @@
             } catch (e) {
                 console.error('Failed to parse or process message', e);
             }
-
-            // console.log('Received message: ' + evt.data);
-            // try {
-            //    resJson = JSON.parse(evt.data)
-            //    if (resJson.code == 0) {
-            //        var jsonResponse = JSON.stringify(resJson, null, 4);
-            //        transcriptionResult.textContent += "\n" + (resJson.data || 'No speech recognized');
-            //    }
-            // } catch (e) {
-            //     console.error('Failed to parse response data', e);
-            //     transcriptionResult.textContent += "\n" + evt.data;
-            // }
         };
 
         ws.onclose = function() {
             console.log('WebSocket connection closed');
+            isConnected = false;
+            recordButton.disabled = true; // Disable button on disconnect
+            // Optional: try to reconnect
+            setTimeout(connectWebSocket, 5000); // Reconnect after 5 seconds
         };
 
         ws.onerror = function(error) {
             console.error('WebSocket error: ' + error);
+            isConnected = false;
+            ws.close();
         };
+    }
+
+    function startRecording() {
+        console.log('Start Recording');
+        record.start();
+        timeInte = setInterval(function() {
+            if(ws && ws.readyState === 1) {
+                var audioBlob = record.getBlob();
+                if (audioBlob.size > 0) {
+                    ws.send(audioBlob);
+                    record.clear();
+                }
+            }
+        }, 500);
+
+        // 清空上次的結果
+        asrResultP.textContent = "";
+        llmResultP.textContent = "";        
 
         recordButton.textContent = "Stop Recording";
         recordButton.classList.add("recording");
@@ -175,11 +172,15 @@
 
     function stopRecording() {
         console.log('Stop Recording');
-        if (ws) {
-            ws.close();
+        if (record) {
             record.stop();
+        }
+        if (timeInte) {
             clearInterval(timeInte);
         }
+        // Note: We no longer close the WebSocket connection here.
+        // ws.close(); 
+        
         recordButton.textContent = "Start Recording";
         recordButton.classList.remove("recording");
         isRecording = false;
@@ -187,6 +188,7 @@
 
     function init(rec) {
         record = rec;
+        connectWebSocket(); // Connect WebSocket after getting mic permission
     }
 
     if (!navigator.getUserMedia) {

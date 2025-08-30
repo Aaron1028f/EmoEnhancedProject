@@ -4,14 +4,17 @@
     <meta charset="utf-8">
     <title>WebSocket Audio Transcription</title>
     <style>
+
+        /*
         #transcriptionResult {
-            white-space: pre-wrap; /* Preserve whitespace and line breaks */
+            white-space: pre-wrap; // Preserve whitespace and line breaks 
             background-color: #f5f5f5;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
             font-family: monospace;
         }
+        */
         #recordButton.recording {
             background-color: red;
             color: white;
@@ -28,16 +31,16 @@
         <label>
             <input type="checkbox" id="speakerVerification"> Speaker Verification
         </label>
-        <hr />
-        Transcription result will be displayed below:
-        <p id="transcriptionResult"></p>
+        <!-- <hr /> -->
+        <!-- Transcription result will be displayed below: -->
+        <!-- <p id="transcriptionResult"></p> -->
 
         <!-- ... 其他 UI 元件 ... -->
         <hr />
-        ASR Result:
-        <p id="asrResult" style="color: blue;"></p>
-        LLM Response:
-        <p id="llmResult" style="color: green;"></p>
+        <b>ASR Result:</b>
+        <p id="asrResult" style="color: rgb(2, 2, 120);" ></p>
+        <b>LLM Response:</b>
+        <p id="llmResult" style="color: rgb(0, 0, 0);"></p>
 
     </div>
 </body>
@@ -54,66 +57,6 @@
     var timeInte = null;
     var isRecording = false;
 
-    // --- 新增音訊播放佇列和相關變數 ---
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    let audioQueue = [];
-    let isPlaying = false;
-    let nextStartTime = 0;
-    let audioHeader = null; // 用來儲存 WAV 檔案頭
-
-    function playAudioQueue() {
-        if (isPlaying || audioQueue.length === 0 || !audioHeader) {
-            // 如果正在播放，或佇列為空，或還沒有收到標頭，就直接返回
-            return;
-        }
-        isPlaying = true;
-
-        const audioData = audioQueue.shift(); // 取出佇列中的第一個音訊塊
-        
-        // Base64 解碼
-        const binaryString = window.atob(audioData);
-        const len = binaryString.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-        }
-        
-        // 建立一個新的 ArrayBuffer，手動將標頭和當前的音訊塊合併
-        const combined = new Uint8Array(audioHeader.length + bytes.length);
-        combined.set(audioHeader);
-        combined.set(bytes, audioHeader.length);
-        
-        audioContext.decodeAudioData(combined.buffer, (buffer) => {
-            const source = audioContext.createBufferSource();
-            source.buffer = buffer;
-            source.connect(audioContext.destination);
-            
-            const currentTime = audioContext.currentTime;
-            const startTime = Math.max(currentTime, nextStartTime);
-            
-            source.start(startTime);
-            
-            // 更新下一個音訊塊的預計開始時間
-            // 注意：這裡的 buffer.duration 是包含標頭長度的音訊的時長，
-            // 我們需要減去一個極小值來估算真實音訊的時長，或者找到更精確的方法。
-            // 為了流暢播放，我們只使用真實音訊塊的時長估算。
-            // 假設伺服器傳送的 chunk 大小固定，可以估算一個固定時長。
-            // 這裡我們用一個簡化的方式：buffer.duration 減去一個小偏移。
-            const headerDurationApproximation = 0.001; // 標頭本身不佔用播放時間
-            const chunkDuration = buffer.duration > headerDurationApproximation ? buffer.duration - headerDurationApproximation : 0;
-            nextStartTime = startTime + chunkDuration;
-
-            source.onended = () => {
-                isPlaying = false;
-                playAudioQueue(); // 當前塊播放完畢，立即檢查並播放下一個
-            };
-        }, (error) => {
-            console.error('Error decoding audio data', error);
-            isPlaying = false;
-            playAudioQueue(); // 解碼失敗，嘗試播放下一個
-        });
-    }
-
     recordButton.onclick = function() {
         if (!isRecording) {
             startRecording();
@@ -124,12 +67,6 @@
 
     function startRecording() {
         console.log('Start Recording');
-        // --- 新增這一行，以應對瀏覽器的自動播放策略 ---
-        // 確保 AudioContext 在使用者點擊後處於 "running" 狀態。
-        if (audioContext.state === 'suspended') {
-            audioContext.resume();
-        }
-        // --- 新增結束 ---
         var speakerVerificationCheckbox = document.getElementById('speakerVerification');
         var sv = speakerVerificationCheckbox.checked ? 1 : 0;
         var lang = document.getElementById("lang").value
@@ -175,63 +112,36 @@
         asrResultP.textContent = "";
         llmResultP.textContent = "";        
 
-        // 清空音訊佇列
-        audioQueue = [];
-        isPlaying = false;
-        nextStartTime = 0;
-        audioHeader = null;
-
         ws.onmessage = function(evt) {
             console.log('Received message: ' + evt.data);
             try {
+                // 將收到的訊息解析成 JSON 物件
                 const message = JSON.parse(evt.data);
 
+                // 根據訊息類型做不同的處理
                 switch (message.type) {
                     case 'asr_result':
+                        // 收到 ASR 結果，顯示在 ASR 區域
                         asrResultP.textContent = message.payload;
+                        // 為 LLM 的回覆做準備
                         llmResultP.textContent = ""; 
                         break;
                     case 'llm_chunk':
+                        // 收到 LLM 的文字流，附加到 LLM 區域
                         llmResultP.textContent += message.payload;
                         break;
-                    
-                    case 'tts_audio_chunk':
-                        // --- 重新設計的 tts_audio_chunk 處理邏輯 ---
-                        const payloadData = message.payload;
-                        const binaryString = window.atob(payloadData);
-                        const bytes = new Uint8Array(binaryString.length);
-                        for (let i = 0; i < binaryString.length; i++) {
-                            bytes[i] = binaryString.charCodeAt(i);
-                        }
-
-                        // 檢查這是否是第一個區塊（包含 'RIFF' 標記）
-                        if (bytes.length === 44 && new TextDecoder().decode(bytes.slice(0,4)) === 'RIFF') {
-                            console.log("Received WAV header.");
-                            audioHeader = bytes; // 儲存標頭
-                            // 收到標頭後，嘗試播放佇列中可能已存在的資料
-                            playAudioQueue();
-                        } else if (audioHeader) {
-                            // 如果已經有標頭了，這就是一個純音訊塊
-                            audioQueue.push(payloadData);
-                            playAudioQueue();
-                        } else {
-                            // 還沒收到標頭，但這又不是標頭，先存起來
-                            console.warn("Received audio data before header, queueing it.");
-                            audioQueue.push(payloadData);
-
-                        }
+                    case 'tts_audio':
+                        // (未來擴展) 收到音訊，解碼並播放
+                        // const audio = new Audio("data:audio/wav;base64," + message.payload);
+                        // audio.play();
                         break;
-
                     case 'error':
+                        // 收到錯誤訊息
                         console.error('Server error:', message.payload);
                         llmResultP.textContent = `Error: ${message.payload}`;
                         break;
                     default:
-                        if (message.code === 2 && message.info === "detect speaker") {
-                             console.log("Speaker detected:", message.data);
-                        } else {
-                             console.warn('Unknown message type:', message.type || message);
-                        }
+                        console.warn('Unknown message type:', message.type);
                 }
             } catch (e) {
                 console.error('Failed to parse or process message', e);
