@@ -1,45 +1,35 @@
-# localLLM.py
 from __future__ import annotations
-
 import os
 import json
 from typing import Any, AsyncIterator
-
 import httpx
 
 from livekit.agents import llm as lkllm
 from livekit.agents.llm import ChatContext
 from livekit.agents.llm.tool_context import FunctionTool, RawFunctionTool
-from livekit.agents.types import (
-    DEFAULT_API_CONNECT_OPTIONS,
-    APIConnectOptions,
-)
+from livekit.agents.types import DEFAULT_API_CONNECT_OPTIONS, APIConnectOptions
 from livekit.agents import APIConnectionError, APIStatusError, APITimeoutError
 
-
-def _msg_text_from_content(content: Any) -> str:
-    # content 可能是 str、list(part objects)、或其它型態
+def _text_from_content(content: Any) -> str:
     if isinstance(content, str):
         return content
     if isinstance(content, list):
-        parts: list[str] = []
+        parts = []
         for p in content:
             if isinstance(p, str):
                 parts.append(p)
             elif isinstance(p, dict):
-                # 常見格式: {"type": "input_text"/"output_text", "text": "..."}
                 t = p.get("text")
                 if isinstance(t, str):
                     parts.append(t)
         return "".join(parts)
     return ""
 
-
-class _MyLocalLLMStream(lkllm.LLMStream):
+class _LocalLLMStream(lkllm.LLMStream):
     def __init__(
         self,
         *,
-        llm: "MyLocalLLM",
+        llm: "LocalLLM",
         client: httpx.AsyncClient,
         api_url: str,
         chat_ctx: ChatContext,
@@ -51,55 +41,45 @@ class _MyLocalLLMStream(lkllm.LLMStream):
         self._api_url = api_url
 
     async def _run(self) -> None:
-        # 1) 從 ChatContext 正確取得歷史訊息
-        history_messages = list(self._chat_ctx.messages)
-
+        items = list(self._chat_ctx.items)
         user_input = ""
-        if history_messages and history_messages[-1].role == "user":
-            user_input = _msg_text_from_content(history_messages[-1].content)
-            history_for_api = history_messages[:-1]
-        else:
-            history_for_api = history_messages
-
-        formatted_history = []
-        for msg in history_for_api:
-            text = _msg_text_from_content(getattr(msg, "content", None))
-            if not text:
-                continue
-            # role 直接沿用（"system" / "user" / "assistant"）
-            formatted_history.append({"role": msg.role, "content": text})
-
-        payload = {
-            "input": user_input,
-            "chat_history": formatted_history,
-            # 視需要加入額外參數
-        }
+        # 從最後一筆 user 訊息抓文字內容
+        for it in reversed(items):
+            if getattr(it, "type", None) == "message" and getattr(it, "role", None) == "user":
+                user_input = _text_from_content(getattr(it, "content", []))
+                break
 
         try:
-            # 2) 串流請求（同時兼容非串流）
+            # 你的 API 是 GET + SSE
             async with self._client.stream(
-                "POST",
+                "GET",
                 self._api_url,
-                json=payload,
+                params={"user_input": user_input},
                 timeout=self._conn_options.timeout,
-            ) as response:
+            ) as resp:
                 try:
-                    response.raise_for_status()
+                    resp.raise_for_status()
                 except httpx.HTTPStatusError as e:
+                    body = ""
+                    try:
+                        body = (await resp.aread()).decode(resp.encoding or "utf-8", errors="ignore")
+                    except Exception:
+                        pass
                     raise APIStatusError(
-                        f"Server returned status {e.response.status_code}",
+                        f"Local LLM returned {e.response.status_code}",
                         status_code=e.response.status_code,
-                        body=await _safe_text(e.response),
+                        body=body,
                     ) from e
 
-                # 嘗試以行為單位讀取（SSE/NDJSON/純文字都能處理）
-                async for text in _iter_text_chunks(response):
+                async for text in _iter_sse_or_text(resp):
                     if not text:
                         continue
-                    chunk = lkllm.ChatChunk(
-                        delta=lkllm.ChoiceDelta(content=text, role="assistant")
+                    self._event_ch.send_nowait(
+                        lkllm.ChatChunk(
+                            id="local",
+                            delta=lkllm.ChoiceDelta(content=text, role="assistant"),
+                        )
                     )
-                    self._event_ch.send_nowait(chunk)
 
         except httpx.TimeoutException as e:
             raise APITimeoutError(retryable=True) from e
@@ -110,86 +90,36 @@ class _MyLocalLLMStream(lkllm.LLMStream):
         except Exception as e:
             raise APIConnectionError(retryable=False) from e
 
-
-async def _iter_text_chunks(response: httpx.Response) -> AsyncIterator[str]:
-    """
-    嘗試解析各種常見串流格式：
-    - SSE: "data: <json或純文字>"，以 \n 分隔，可能含 [DONE]
-    - NDJSON: 每行一個 JSON；取 "delta" 或 "content" 欄位
-    - 純文字：每行即一段
-    若伺服器非串流，一次回整塊，也能處理。
-    """
-    content_type = (response.headers.get("content-type") or "").lower()
-
-    if "text/event-stream" not in content_type and "chunked" not in response.headers.get("transfer-encoding", "").lower():
-        full = await _safe_text(response)
-        text = _extract_text_from_json_line(full)
-        if text is not None:
-            yield text
-            return
-        if full:
-            yield full
-        return
-
-    async for raw_line in response.aiter_lines():
-        if not raw_line:
+async def _iter_sse_or_text(resp: httpx.Response) -> AsyncIterator[str]:
+    async for raw in resp.aiter_lines():
+        if not raw:
             continue
-        line = raw_line.strip()
-
+        line = raw.strip()
         if line.startswith("data:"):
             data = line[5:].strip()
-            if not data or data == "[DONE]":
+            if data == "[DONE]" or not data:
                 continue
-            text = _extract_text_from_json_line(data)
-            if text is not None:
-                yield text
-                continue
+            # 嘗試 JSON {"delta": "..."}，否則當純文字
+            try:
+                obj = json.loads(data)
+                if isinstance(obj, dict):
+                    if isinstance(obj.get("delta"), str):
+                        yield obj["delta"]
+                        continue
+                    if isinstance(obj.get("content"), str):
+                        yield obj["content"]
+                        continue
+            except Exception:
+                pass
             yield data
-            continue
+        else:
+            # 非標準 SSE，就當作純文字片段
+            yield line
 
-        if line.startswith("{") and line.endswith("}"):
-            text = _extract_text_from_json_line(line)
-            if text is not None:
-                yield text
-                continue
-
-        yield line
-
-
-def _extract_text_from_json_line(s: str) -> str | None:
-    try:
-        obj = json.loads(s)
-    except Exception:
-        return None
-
-    for key in ("delta", "content", "text"):
-        val = obj.get(key)
-        if isinstance(val, str) and val:
-            return val
-
-    if "choices" in obj and isinstance(obj["choices"], list):
-        try:
-            c0 = obj["choices"][0]
-            delta = c0.get("delta") or {}
-            content = delta.get("content")
-            if isinstance(content, str) and content:
-                return content
-        except Exception:
-            pass
-    return None
-
-
-async def _safe_text(resp: httpx.Response) -> str:
-    try:
-        return (await resp.aread()).decode(resp.encoding or "utf-8", errors="ignore")
-    except Exception:
-        return ""
-
-
-class MyLocalLLM(lkllm.LLM):
+class LocalLLM(lkllm.LLM):
     def __init__(self, api_url: str | None = None):
         super().__init__()
-        self._api_url = api_url or os.getenv("LOCAL_LLM_URL", "http://localhost:28000/streaming_chat")
+        self._api_url = api_url or os.getenv("LOCAL_LLM_URL", "http://127.0.0.1:28000/streaming_response")
         self._client = httpx.AsyncClient(
             timeout=httpx.Timeout(connect=10.0, read=60.0, write=10.0, pool=10.0),
             follow_redirects=True,
@@ -197,7 +127,7 @@ class MyLocalLLM(lkllm.LLM):
 
     @property
     def model(self) -> str:
-        return "local-fastapi-roleplay-model"
+        return "local-roleplay-model"
 
     def chat(
         self,
@@ -207,7 +137,7 @@ class MyLocalLLM(lkllm.LLM):
         conn_options: APIConnectOptions = DEFAULT_API_CONNECT_OPTIONS,
         **_: Any,
     ) -> lkllm.LLMStream:
-        return _MyLocalLLMStream(
+        return _LocalLLMStream(
             llm=self,
             client=self._client,
             api_url=self._api_url,

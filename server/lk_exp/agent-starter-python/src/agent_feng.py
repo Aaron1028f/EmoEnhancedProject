@@ -19,7 +19,7 @@ from livekit.agents.llm import function_tool
 from livekit.plugins import cartesia, deepgram, noise_cancellation, openai, silero
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
-from localLLM import MyLocalLLM
+from localLLM import LocalLLM
 from localTTS import LocalTTS
 
 
@@ -69,8 +69,8 @@ async def entrypoint(ctx: JobContext):
     session = AgentSession(
         # A Large Language Model (LLM) is your agent's brain, processing user input and generating a response
         # See all providers at https://docs.livekit.io/agents/integrations/llm/
-        llm=openai.LLM(model="gpt-4o-mini"),
-        # llm=MyLocalLLM(),
+        # llm=openai.LLM(model="gpt-4o-mini"),
+        llm=LocalLLM(),
         
         
         # Speech-to-text (STT) is your agent's ears, turning the user's speech into text that the LLM can understand
@@ -81,8 +81,8 @@ async def entrypoint(ctx: JobContext):
         # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
         # See all providers at https://docs.livekit.io/agents/integrations/tts/
         # tts=cartesia.TTS(voice="6f84f4b8-58a2-430c-8c79-688dad597532"),
-        # tts=openai.TTS(model='gpt-4o-mini-tts', voice="ash"),
         
+        # tts=openai.TTS(model='gpt-4o-mini-tts', voice="ash"),
         tts = LocalTTS(),
         
         
