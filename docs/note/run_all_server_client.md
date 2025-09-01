@@ -9,7 +9,8 @@ python server_wss.py
 # run LLM and RAG server
 conda activate roleplay
 cd server/models/LLM/src/
-python roleplay_api.py
+# python roleplay_api.py
+python roleplay_api_for_lk.py
 
 # run TTS server (GPT-SoVits)
 conda activate GPTSoVits

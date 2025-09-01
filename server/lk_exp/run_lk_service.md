@@ -6,7 +6,18 @@ cd server/lk_exp/server_src_bin/
 /home/aaron/project/server/lk_exp/server_src_bin/livekit-server --dev
 # /home/aaron/project/server/lk_exp/server_src_bin/livekit-server --dev --bind 0.0.0.0
 
+# 產生access token (會產生加入時要填的url, 以及access token)(when needed)
+cd server/lk_exp/server_src_bin/
+./lk token create \
+  --api-key devkey --api-secret secret \
+  --join --room test_room --identity test_user \
+  --valid-for 24h
+
 ```
+
+開啟playground:
+https://agents-playground.livekit.io/
+
 
 ### FastAPI 後端程式 (專門管理房間與產生token)
 ```bash
