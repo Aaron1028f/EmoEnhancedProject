@@ -84,4 +84,12 @@ pip install --upgrade gradio
 # livekit==1.0.12
 # livekit-api==1.0.5
 
+
+# Name                    Version                   Build  Channel
+livekit                   1.0.12                   pypi_0    pypi
+livekit-agents            1.2.8                    pypi_0    pypi
+livekit-api               1.0.5                    pypi_0    pypi
+livekit-blingfire         1.0.0                    pypi_0    pypi
+livekit-protocol          1.0.5                    pypi_0    pypi
+
 ```

@@ -5,7 +5,7 @@ import asyncio
 import os
 import numpy as np
 from livekit import rtc, api
-from gene_stream import GeneFace2Infer # 從你現有的檔案中匯入
+from server.models.GeneFacePlusPlus.emogene.realtime.emogene_stream import GeneFace2Infer # 從你現有的檔案中匯入
 import logging
 
 import cv2  # 用於影像處理

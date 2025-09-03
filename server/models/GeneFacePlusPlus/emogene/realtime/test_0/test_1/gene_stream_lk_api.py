@@ -2,7 +2,7 @@
 import asyncio
 from lk_webhook_server import serve as webhook_serve
 # GeneFace++
-from emogene.realtime.gene_stream import GeneFace2Infer
+from server.models.GeneFacePlusPlus.emogene.realtime.emogene_stream import GeneFace2Infer
 import numpy as np
 import cv2
 # // ...existing code...

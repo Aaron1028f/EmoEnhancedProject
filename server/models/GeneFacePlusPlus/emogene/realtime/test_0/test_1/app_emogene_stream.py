@@ -8,7 +8,7 @@ sys.path.append('./')
 import argparse
 import gradio as gr
 # from inference.genefacepp_infer import GeneFace2Infer
-from emogene.realtime.gene_stream import GeneFace2Infer # [修改] 引用新的串流文件from utils.commons.hparams import hparams
+from server.models.GeneFacePlusPlus.emogene.realtime.emogene_stream import GeneFace2Infer # [修改] 引用新的串流文件from utils.commons.hparams import hparams
 from utils.commons.hparams import hparams
 import random
 import time

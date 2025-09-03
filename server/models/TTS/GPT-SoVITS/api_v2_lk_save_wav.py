@@ -344,8 +344,10 @@ from pathlib import Path
 import httpx
 import asyncio
 
-AVATAR_SAVE_DIR = Path(os.getenv("AVATAR_SAVE_DIR", "/tmp/tts_utterances"))
-AVATAR_WEBHOOK_URL = os.getenv("AVATAR_WEBHOOK_URL", "http://127.0.0.1:9901/avatar/notify")
+# AVATAR_SAVE_DIR = Path(os.getenv("AVATAR_SAVE_DIR", "/tmp/tts_utterances"))
+AVATAR_SAVE_DIR = Path("/home/aaron/project/server/models/GeneFacePlusPlus/emogene/DATA/temp")
+
+AVATAR_WEBHOOK_URL = os.getenv("AVATAR_WEBHOOK_URL", "http://127.0.0.1:31000/generate_full_video")
 AVATAR_SAVE_DIR.mkdir(parents=True, exist_ok=True)
 
 def _save_wav(np_data: np.ndarray, sr: int) -> str:
@@ -358,18 +360,58 @@ def _save_wav(np_data: np.ndarray, sr: int) -> str:
     return str(out_path)
 
 def _notify_agent(wav_path: str, text: str, sr: int) -> None:
-    """
-    同步呼叫本地 webhook（簡單可靠）。若想非阻塞，可用 asyncio.create_task 包 async 版本。
-    """
+    """同步通知 emogene，送出 emogene 期望的欄位。"""
     try:
         with httpx.Client(timeout=2.0) as client:
             client.post(
                 AVATAR_WEBHOOK_URL,
-                json={"wav_path": wav_path, "text": text, "sample_rate": sr},
+                json={
+                    "audio_path": wav_path,        # 修正欄位名
+                    # "room_name": AVATAR_ROOM_NAME, # 由環境決定
+                    # "publish_audio": AVATAR_PUBLISH_AUDIO,
+                },
             )
     except Exception:
         traceback.print_exc()
+        
 
+
+async def _notify_agent_async(wav_path: str, text: str, sr: int):
+    try:
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            await client.post(
+                AVATAR_WEBHOOK_URL,
+                json={
+                    "audio_path": wav_path,        # 修正欄位名
+                    # "room_name": AVATAR_ROOM_NAME,
+                    # "publish_audio": AVATAR_PUBLISH_AUDIO,
+                },
+            )
+    except Exception:
+        traceback.print_exc()
+        
+import threading
+def notify_emogene_fire_and_forget(wav_path: str, room_name: str | None = None, publish_audio: bool | None = None):
+    """在背景執行緒發送回呼，不等待回傳。"""
+    payload = {
+        "audio_path": wav_path,
+        # "room_name": room_name or AVATAR_ROOM_NAME,
+        # "publish_audio": AVATAR_PUBLISH_AUDIO if publish_audio is None else publish_audio,
+    }
+
+    def _worker():
+        try:
+            # 小連線池、合理 timeout，避免卡住
+            with httpx.Client(
+                timeout=httpx.Timeout(connect=2.0, write=5.0, read=5.0),
+                limits=httpx.Limits(max_keepalive_connections=0, max_connections=5),
+                follow_redirects=False,
+            ) as client:
+                client.post(AVATAR_WEBHOOK_URL, json=payload)
+        except Exception:
+            traceback.print_exc()
+
+    threading.Thread(target=_worker, daemon=True).start()
 
 async def tts_handle(req: dict):
     """
@@ -447,7 +489,8 @@ async def tts_handle(req: dict):
                         try:
                             full_np = np.concatenate(accum_np, axis=0)
                             wav_path = _save_wav(full_np, sr_for_save)
-                            _notify_agent(wav_path, req.get("text", ""), sr_for_save)
+                            # _notify_agent(wav_path, req.get("text", ""), sr_for_save)
+                            notify_emogene_fire_and_forget(wav_path)
                         except Exception:
                             traceback.print_exc()
 
@@ -505,15 +548,15 @@ async def tts_handle(req: dict):
     #         return Response(audio_data, media_type=f"audio/{media_type}")
     # except Exception as e:
     #     return JSONResponse(status_code=400, content={"message": "tts failed", "Exception": str(e)})
-async def _notify_agent_async(wav_path: str, text: str, sr: int):
-    try:
-        async with httpx.AsyncClient(timeout=2.0) as client:
-            await client.post(
-                AVATAR_WEBHOOK_URL,
-                json={"wav_path": wav_path, "text": text, "sample_rate": sr},
-            )
-    except Exception:
-        traceback.print_exc()
+# async def _notify_agent_async(wav_path: str, text: str, sr: int):
+#     try:
+#         async with httpx.AsyncClient(timeout=2.0) as client:
+#             await client.post(
+#                 AVATAR_WEBHOOK_URL,
+#                 json={"wav_path": wav_path, "text": text, "sample_rate": sr},
+#             )
+#     except Exception:
+#         traceback.print_exc()
         
         
 

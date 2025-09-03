@@ -2,7 +2,7 @@ import os, sys
 sys.path.append('./')
 import argparse
 import gradio as gr
-from emogene.realtime.gene_stream import GeneFace2Infer
+from server.models.GeneFacePlusPlus.emogene.realtime.emogene_stream import GeneFace2Infer
 from utils.commons.hparams import hparams
 import random
 import time

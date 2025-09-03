@@ -15,7 +15,7 @@ import asyncio
 import time
 import httpx
 
-from emogene.realtime.gene_stream import GeneFace2Infer
+from server.models.GeneFacePlusPlus.emogene.realtime.emogene_stream import GeneFace2Infer
 
 # --- 1. 初始化 FastAPI 應用和模型 ---
 

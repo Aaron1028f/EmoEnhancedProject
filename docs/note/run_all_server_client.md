@@ -2,8 +2,8 @@
 ```bash
 # run livekit (cloud), (if run local, modify the .env.local setting)
 conda activate livekit
-cd server/lk_exp
-uv run python src/agent_feng.py dev
+cd server/lk_exp/agent-starter-python/
+uv run python src/agent_feng_vid.py dev
 
 # run LLM and RAG server
 conda activate roleplay
@@ -14,8 +14,13 @@ python roleplay_api_for_lk.py
 # run TTS server (GPT-SoVits)
 conda activate GPTSoVits
 cd server/models/TTS/GPT-SoVITS/
-python api_v2.py
+python api_v2_lk_save_wav.py
 # python api_v2.py -a 127.0.0.1 -p 9880 -c GPT_SoVITS/configs/tts_infer.yaml
+
+# run EmoGene server
+conda activate geneface_py310
+cd server/models/GeneFacePlusPlus/
+python emogene/realtime/emogene_lk_server.py
 
 ```
 
