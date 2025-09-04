@@ -40,7 +40,7 @@ logger = logging.getLogger("video_streamer_agent")
 # =================================================================================================
 # Fast API
 # =================================================================================================
-ROOM_NAME = 'playground-Ys7g-VpG3'
+ROOM_NAME = 'playground-hXAr-rAmg'
 
 class GenerateRequest(BaseModel):
     audio_path: str
@@ -50,6 +50,19 @@ class GenerateRequest(BaseModel):
 # prepare global variables
 args = None 
 inferer_instance = None
+
+# 佇列與背景工作者
+publish_queue: asyncio.Queue | None = None
+publisher_task: asyncio.Task | None = None
+# 新增：序列化推論的鎖
+inference_lock: asyncio.Lock | None = None
+
+@dataclass
+class PublishJob:
+    room_name: str
+    video_path: str
+    publish_audio: bool
+    done: asyncio.Future  # 若不需等待結果，可以不使用
 
 MODEL_INPUT_MAY = {
     # input output setting
@@ -91,34 +104,66 @@ MODEL_INPUT_MAY = {
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # START
-    global args, inferer_instance
+    global args, inferer_instance, publish_queue, publisher_task, inference_lock
     
     print("Initializing model...")
-    # inferer_instance = GeneFace2Infer(
-    #     audio2secc_dir=MODEL_INPUT_MAY['audio2secc'],
-    #     postnet_dir=MODEL_INPUT_MAY['postnet_dir'],
-    #     head_model_dir=MODEL_INPUT_MAY['head_model_dir'],
-    #     torso_model_dir=MODEL_INPUT_MAY['torso_model_dir'],
-    #     use_emotalk=MODEL_INPUT_MAY['use_emotalk'],
-    #     device=MODEL_INPUT_MAY['device']
-    # )
-    video_path = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/DATA/lk_temp.mp4'
-    await publish_video_to_room(ROOM_NAME, video_path)
+    inferer_instance = GeneFace2Infer(
+        audio2secc_dir=MODEL_INPUT_MAY['audio2secc'],
+        postnet_dir=MODEL_INPUT_MAY['postnet_dir'],
+        head_model_dir=MODEL_INPUT_MAY['head_model_dir'],
+        torso_model_dir=MODEL_INPUT_MAY['torso_model_dir'],
+        use_emotalk=MODEL_INPUT_MAY['use_emotalk'],
+        device=MODEL_INPUT_MAY['device']
+    )
+    publish_queue = asyncio.Queue()
+    inference_lock = asyncio.Lock()
+
+    async def publisher_worker():
+        logger.info("publisher worker started")
+        try:
+            while True:
+                job: PublishJob = await publish_queue.get()
+                try:
+                    await publish_video_to_room(job.room_name, job.video_path, publish_audio=job.publish_audio)
+                    if not job.done.done():
+                        job.done.set_result({"video_path": job.video_path, "error": None, "published": True})
+                except Exception as e:
+                    if not job.done.done():
+                        job.done.set_result({"video_path": job.video_path, "error": f"publish failed: {e}", "published": False})
+                finally:
+                    publish_queue.task_done()
+        except asyncio.CancelledError:
+            logger.info("publisher worker cancelled")
+            raise
+
+    publisher_task = asyncio.create_task(publisher_worker())
+
+    # 如需啟動時測試播一支影片，也請透過佇列排隊，而不是直接呼叫
+    test_video_path = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/DATA/lk_temp.mp4'
+    test_future = asyncio.get_running_loop().create_future()
+    await publish_queue.put(PublishJob(ROOM_NAME, test_video_path, True, test_future))
+
 
     print("Model loaded.")
 
     # prewarm: run once with
-    # print('Start run once to prewarm the model')
-    # inp = MODEL_INPUT_MAY.copy()
-    # inp['drv_audio_name'] = "emogene/DATA/happy.wav"
-    # inferer_instance.infer_once(inp)
-    # print('Prewarming complete.')
+    print('Start run once to prewarm the model')
+    inp = MODEL_INPUT_MAY.copy()
+    inp['drv_audio_name'] = "emogene/DATA/happy.wav"
+    inferer_instance.infer_once(inp)
+    print('Prewarming complete.')
 
     print("Application startup complete.")
     yield # App running
     
     # END
     print("Application shutting down. Cleaning up resources...")
+    if publisher_task:
+        publisher_task.cancel()
+        try:
+            await publisher_task
+        except asyncio.CancelledError:
+            pass
     inferer_instance = None
 
 
@@ -132,22 +177,41 @@ async def generate_full_video_api(request: GenerateRequest):
     if not os.path.exists(request.audio_path):
         return {"error": f"Audio file not found: {request.audio_path}", "video_path": None, "accepted": False}
     # return {"error": None, "video_path": None, "accepted": True}
-    video_path = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/DATA/lk_temp.mp4'
-    await publish_video_to_room(request.room_name, video_path, publish_audio=request.publish_audio)
-    # # set the input audio path and output video path
-    # inp = MODEL_INPUT_MAY.copy()
-    # inp['drv_audio_name'] = request.audio_path
-    # inp['out_name'] = f"emogene/DATA/temp/{request.audio_path.split('/')[-1].split('.')[0]}_out.mp4"
     
-    # # check if the path exist
-    # if not os.path.exists(inp['out_name']):
-    #     os.makedirs(os.path.dirname(inp['out_name']), exist_ok=True)
+    
+    # just testing
+    # video_path = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/DATA/lk_temp.mp4'
+    # await publish_video_to_room(request.room_name, video_path, publish_audio=request.publish_audio)
+    
+    
+    # set the input audio path and output video path
+    inp = MODEL_INPUT_MAY.copy()
+    inp['drv_audio_name'] = request.audio_path
+    inp['out_name'] = f"emogene/DATA/temp/{request.audio_path.split('/')[-1].split('.')[0]}_out.mp4"
+    
+    
+    # check if the path exist
+    if not os.path.exists(inp['out_name']):
+        os.makedirs(os.path.dirname(inp['out_name']), exist_ok=True)
+    
+    try:
+        if inference_lock is None:
+            raise RuntimeError("inference lock not initialized")
+        async with inference_lock:
+            video_path = await asyncio.to_thread(inferer_instance.infer_once, inp)
+    except Exception as e:
+        return {"video_path": None, "error": f"inference failed: {e}", "published": False}
 
-    # try:
-    #     # 避免阻塞事件迴圈
-    #     video_path = await asyncio.to_thread(inferer_instance.infer_once, inp)
-    # except Exception as e:
-    #     return {"video_path": None, "error": f"inference failed: {e}", "published": False}
+    try:
+        loop = asyncio.get_running_loop()
+        done_future = loop.create_future()
+        if publish_queue is None:
+            return {"video_path": video_path, "error": "publish queue not initialized", "published": False}
+        await publish_queue.put(PublishJob(request.room_name, video_path, request.publish_audio, done_future))
+        # 立即回應，表示已排隊等待發佈；如需等發佈完成，可 await done_future
+        return {"video_path": video_path, "error": None, "queued": True, "published": False}
+    except Exception as e:
+        return {"video_path": video_path, "error": f"enqueue failed: {e}", "published": False}
 
     # try:
     #     await publish_video_to_room(request.room_name, video_path, publish_audio=request.publish_audio)
@@ -345,40 +409,44 @@ async def publish_video_to_room(room_name: str, video_path: str, publish_audio: 
             )
 
     try:
-        while True:
-            streamer.reset()
+        # while True:
+        streamer.reset()
 
-            video_stream = streamer.stream_video()
-            audio_stream = streamer.stream_audio()
+        video_stream = streamer.stream_video()
+        audio_stream = streamer.stream_audio()
 
-            # read the head frames and push them at the same time
-            first_video_frame, video_timestamp = await video_stream.__anext__()
-            first_audio_frame, audio_timestamp = await audio_stream.__anext__()
-            logger.info(
-                f"first video duration: {1 / media_info.video_fps:.3f}s, "
-                f"first audio duration: {first_audio_frame.duration:.3f}s"
-            )
-            await av_sync.push(first_video_frame, video_timestamp)
-            await av_sync.push(first_audio_frame, audio_timestamp)
+        # read the head frames and push them at the same time
+        first_video_frame, video_timestamp = await video_stream.__anext__()
+        first_audio_frame, audio_timestamp = await audio_stream.__anext__()
+        logger.info(
+            f"first video duration: {1 / media_info.video_fps:.3f}s, "
+            f"first audio duration: {first_audio_frame.duration:.3f}s"
+        )
+        await av_sync.push(first_video_frame, video_timestamp)
+        await av_sync.push(first_audio_frame, audio_timestamp)
 
-            video_task = asyncio.create_task(_push_frames(video_stream, av_sync))
-            audio_task = asyncio.create_task(_push_frames(audio_stream, av_sync))
+        video_task = asyncio.create_task(_push_frames(video_stream, av_sync))
+        audio_task = asyncio.create_task(_push_frames(audio_stream, av_sync))
 
-            log_fps_task = asyncio.create_task(_log_fps(av_sync))
+        log_fps_task = asyncio.create_task(_log_fps(av_sync))
 
-            # wait for both tasks to complete
-            await asyncio.gather(video_task, audio_task)
-            await av_sync.wait_for_playout()
+        # wait for both tasks to complete
+        await asyncio.gather(video_task, audio_task)
+        await av_sync.wait_for_playout()
 
-            # clean up
-            av_sync.reset()
-            log_fps_task.cancel()
-            logger.info("playout finished")
+        # clean up
+        av_sync.reset()
+        log_fps_task.cancel()
+        logger.info("playout finished")
     finally:
         await streamer.aclose()
         await av_sync.aclose()
         await audio_source.aclose()
         await video_source.aclose()
+        try:
+            await room.disconnect()  # 重要：發布完就斷線，釋放 identity
+        except Exception as e:
+            logger.warning("room disconnect error: %s", e)        
 
 def main():
     uvicorn.run(app, host="0.0.0.0", port=31000)

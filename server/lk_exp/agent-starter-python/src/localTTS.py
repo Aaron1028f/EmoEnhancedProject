@@ -63,7 +63,7 @@ class LocalTTS(tts.TTS):
         REF_AUDIO_PATH = '/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0028094080_0028232000.wav'
 
         self._opts = _TTSOptions(
-            base_url=base_url or os.getenv("LOCAL_TTS_URL", "http://127.0.0.1:9880/tts"),
+            base_url=base_url or os.getenv("LOCAL_TTS_URL", "http://127.0.0.1:29000/tts"),
             text_lang=(text_lang or os.getenv("LOCAL_TTS_TEXT_LANG", "zh")).lower(),
             prompt_lang=(prompt_lang or os.getenv("LOCAL_TTS_PROMPT_LANG", "zh")).lower(),
             ref_audio_path=ref_audio_path or os.getenv("LOCAL_TTS_REF_AUDIO", REF_AUDIO_PATH),

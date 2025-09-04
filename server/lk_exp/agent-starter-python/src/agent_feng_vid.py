@@ -10,6 +10,7 @@ from livekit.agents import (
     JobProcess,
     MetricsCollectedEvent,
     RoomInputOptions,
+    RoomOutputOptions,
     RunContext,
     WorkerOptions,
     cli,
@@ -121,6 +122,12 @@ async def entrypoint(ctx: JobContext):
             # - For telephony applications, use `BVCTelephony` for best results
             # noise_cancellation=noise_cancellation.BVC(),
         ),
+        # # Disable audio output and transcription if not needed
+        # room_output_options=RoomOutputOptions(
+        #     audio_enabled=False,          # 關閉 Agent 在房間的音訊發佈
+        #     sync_transcription=False,     # 避免把文字同步綁到音訊輸出
+        #     # transcription_enabled=True, # 需要時可保留文字輸出        
+        # ),
     )
 
     # Join the room and connect to the user

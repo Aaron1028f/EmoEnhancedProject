@@ -129,7 +129,7 @@ cut_method_names = get_cut_method_names()
 parser = argparse.ArgumentParser(description="GPT-SoVITS api")
 parser.add_argument("-c", "--tts_config", type=str, default="GPT_SoVITS/configs/tts_infer.yaml", help="tts_infer路径")
 parser.add_argument("-a", "--bind_addr", type=str, default="127.0.0.1", help="default: 127.0.0.1")
-parser.add_argument("-p", "--port", type=int, default="9880", help="default: 9880")
+parser.add_argument("-p", "--port", type=int, default="29000", help="default: 29000")
 args = parser.parse_args()
 config_path = args.tts_config
 # device = args.device
@@ -403,7 +403,7 @@ def notify_emogene_fire_and_forget(wav_path: str, room_name: str | None = None, 
         try:
             # 小連線池、合理 timeout，避免卡住
             with httpx.Client(
-                timeout=httpx.Timeout(connect=2.0, write=5.0, read=5.0),
+                timeout=httpx.Timeout(connect=2.0, write=5.0, read=5.0, pool=5.0),
                 limits=httpx.Limits(max_keepalive_connections=0, max_connections=5),
                 follow_redirects=False,
             ) as client:
