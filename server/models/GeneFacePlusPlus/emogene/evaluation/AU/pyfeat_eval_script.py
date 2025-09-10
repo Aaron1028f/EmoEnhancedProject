@@ -22,19 +22,38 @@ if not os.path.exists(SAVE_FIG_BASE_DIR):
 # other settings
 
 # EMOTION_ID_LIST = [i for i in range(3, 9)] # emotion id: 3~8 (py-feat only support 3~8)
-# ACTOR_ID_LIST = [i for i in range(1, 25)] # actor id: 1~24
+ACTOR_ID_LIST = [i for i in range(1, 25)] # actor id: 1~24
 EMOTION_ID_LIST = [i for i in range(3, 9)] # emotion id: 3~8 (py-feat only support 3~8)
-ACTOR_ID_LIST = [20] # actor id: 1~24
+# ACTOR_ID_LIST = [20] # actor id: 1~24
 SKIP_FRAME_NUM = 3
-SAVE_CSV_FILENAME = 'temp_a20_{src}.csv'
+SAVE_CSV_FILENAME = 'final_results_all_actor_{src}'
 # SAVE_CSV_FILENAME = 'results_{src}_RAVDESS_May_all_flat.csv'
-SAVE_CSV_PATH = f'{SAVE_FIG_BASE_DIR}/{SAVE_CSV_FILENAME}'
+SAVE_CSV_BASE_DIR = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/AU/exp_csv_files'
+SAVE_CSV_PATH = f'{SAVE_CSV_BASE_DIR}/{SAVE_CSV_FILENAME}.csv'
 
 # -------------------------------------------------------------------------------------------------
 # --- Set to True to run detection, False to load from CSV ---
 RUN_FULL_DETECTION = True  
-EXISTING_CSV_FILE_PATH_EMOGENE = f'{SAVE_FIG_BASE_DIR}/results_emogene_RAVDESS_May_raw_flat.csv'
-EXISTING_CSV_FILE_PATH_GENEFACEPP = f'{SAVE_FIG_BASE_DIR}/results_genefacepp_RAVDESS_May_raw_flat.csv'
+# EXISTING_CSV_FILE_PATH_EMOGENE = f'{SAVE_FIG_BASE_DIR}/results_emogene_RAVDESS_May_raw_flat.csv'
+# EXISTING_CSV_FILE_PATH_GENEFACEPP = f'{SAVE_FIG_BASE_DIR}/results_genefacepp_RAVDESS_May_raw_flat.csv'
+
+EXISTING_CSV_FILE_PATH_EMOGENE = f'{SAVE_FIG_BASE_DIR}/temp_a20_emogene.csv'
+EXISTING_CSV_FILE_PATH_GENEFACEPP = f'{SAVE_FIG_BASE_DIR}/temp_a20_genefacepp.csv'
+
+# =================================================================================================
+
+# save all the setting info in a text file
+if RUN_FULL_DETECTION:
+    with open(f'{SAVE_CSV_BASE_DIR}/{SAVE_CSV_FILENAME}_setting.txt', 'w') as f:
+        f.write(f'EMOGENE_BASE_DIR: {EMOGENE_BASE_DIR}\n')
+        f.write(f'GENEFACEPP_BASE_DIR: {GENEFACEPP_BASE_DIR}\n')
+        f.write(f'VIDEO_DIR: {VIDEO_DIR}\n')
+        f.write(f'EMOTION_MAP: {EMOTION_MAP}\n')
+        f.write(f'SAVE_FIG_BASE_DIR: {SAVE_FIG_BASE_DIR}\n')
+        f.write(f'EMOTION_ID_LIST: {EMOTION_ID_LIST}\n')
+        f.write(f'ACTOR_ID_LIST: {ACTOR_ID_LIST}\n')
+        f.write(f'SKIP_FRAME_NUM: {SKIP_FRAME_NUM}\n')
+        f.write(f'SAVE_CSV_PATH: {SAVE_CSV_PATH}\n')
 
 # =================================================================================================
 

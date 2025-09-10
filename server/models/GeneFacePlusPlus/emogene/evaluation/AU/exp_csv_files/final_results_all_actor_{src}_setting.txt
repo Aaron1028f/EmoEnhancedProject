@@ -1,0 +1,9 @@
+EMOGENE_BASE_DIR: /home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/emogene_ver/RAVDESS
+GENEFACEPP_BASE_DIR: /home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/genefacepp_ver/RAVDESS
+VIDEO_DIR: /Actor_{actor_id:02d}/03-01-0{emo_id}-02-01-02-{actor_id:02d}.mp4
+EMOTION_MAP: {3: 'happiness', 4: 'sadness', 5: 'anger', 6: 'fear', 7: 'disgust', 8: 'surprise'}
+SAVE_FIG_BASE_DIR: /home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/AU/figures/
+EMOTION_ID_LIST: [3, 4, 5, 6, 7, 8]
+ACTOR_ID_LIST: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+SKIP_FRAME_NUM: 3
+SAVE_CSV_PATH: /home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/AU/exp_csv_files/final_results_all_actor_{src}.csv

@@ -281,7 +281,12 @@ def compute_LLE_projection_by_parts(feats, feat_database, K=10, gene_feat=None, 
         final_feat_fuse_raw[:, dim_indices] = feat_fuse_part
         final_errors[name] = errors_part
         final_weights[name] = weights_part
+
+    # exp for report 
+    # final_feat_fuse_raw, final_errors, final_weights = compute_LLE_projection(feats, feat_database, K)
     
+    
+
     # smooth the final fused features (use savgol_filter, good engough for May, but not good engough for Feng)
     # smoothed_feat_fuse = smooth_features_seq_savgol(
     #     final_feat_fuse_raw, 
