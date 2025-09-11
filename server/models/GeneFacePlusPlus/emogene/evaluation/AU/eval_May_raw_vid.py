@@ -20,7 +20,7 @@ def detect_video(video_path):
     print(f"Analyzing video: {video_path}...")
     # skip_frames=1000 是一個合理的設定，可以加快處理速度，同時保留足夠的細節
     video_prediction = detector.detect_video(
-        video_path, data_type="video", skip_frames=24, face_detection_threshold=0.95
+        video_path, data_type="video", skip_frames=1000, face_detection_threshold=0.95
     )
     print("Analysis complete.")
     return video_prediction

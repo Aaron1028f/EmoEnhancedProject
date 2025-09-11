@@ -9,12 +9,14 @@ detector = Detector(device='cuda')
 # fixed settings
 EMOGENE_BASE_DIR = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/emogene_ver/RAVDESS'
 GENEFACEPP_BASE_DIR = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/DATA/May/genefacepp_ver/RAVDESS'
-VIDEO_DIR = '/Actor_{actor_id:02d}/03-01-0{emo_id}-02-01-02-{actor_id:02d}.mp4'
+VIDEO_DIR = '/Actor_{actor_id:02d}/03-01-0{emo_id}-01-01-02-{actor_id:02d}.mp4' # second neutral "KIds..."
 
 EMOTION_MAP = {
+    1: 'neutral',
+    # 2: 'calm',
     3: 'happiness', 4: 'sadness', 5: 'anger', 6: 'fear', 7: 'disgust', 8: 'surprise'
 }    
-SAVE_FIG_BASE_DIR = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/AU/figures/'
+SAVE_FIG_BASE_DIR = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/AU/exp_figures/'
 if not os.path.exists(SAVE_FIG_BASE_DIR):
     os.makedirs(SAVE_FIG_BASE_DIR)
     
@@ -23,10 +25,11 @@ if not os.path.exists(SAVE_FIG_BASE_DIR):
 
 # EMOTION_ID_LIST = [i for i in range(3, 9)] # emotion id: 3~8 (py-feat only support 3~8)
 ACTOR_ID_LIST = [i for i in range(1, 25)] # actor id: 1~24
-EMOTION_ID_LIST = [i for i in range(3, 9)] # emotion id: 3~8 (py-feat only support 3~8)
+# EMOTION_ID_LIST = [i for i in range(3, 9)] # emotion id: 3~8 (py-feat only support 3~8)
+EMOTION_ID_LIST = [1] # neutral emotion id: 1
 # ACTOR_ID_LIST = [20] # actor id: 1~24
 SKIP_FRAME_NUM = 3
-SAVE_CSV_FILENAME = 'final_results_all_actor_{src}'
+SAVE_CSV_FILENAME = 'neutral_results_all_actor_{src}'
 # SAVE_CSV_FILENAME = 'results_{src}_RAVDESS_May_all_flat.csv'
 SAVE_CSV_BASE_DIR = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/AU/exp_csv_files'
 SAVE_CSV_PATH = f'{SAVE_CSV_BASE_DIR}/{SAVE_CSV_FILENAME}.csv'
@@ -40,8 +43,8 @@ RUN_FULL_DETECTION = False
 # EXISTING_CSV_FILE_PATH_EMOGENE = f'{SAVE_FIG_BASE_DIR}/temp_a20_emogene.csv'
 # EXISTING_CSV_FILE_PATH_GENEFACEPP = f'{SAVE_FIG_BASE_DIR}/temp_a20_genefacepp.csv'
 
-EXISTING_CSV_FILE_PATH_EMOGENE = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/AU/exp_csv_files/final_results_all_actor_emogene.csv'
-EXISTING_CSV_FILE_PATH_GENEFACEPP = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/AU/exp_csv_files/final_results_all_actor_genefacepp.csv'
+EXISTING_CSV_FILE_PATH_EMOGENE = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/AU/exp_csv_files/neutral_results_all_actor_emogene.csv'
+EXISTING_CSV_FILE_PATH_GENEFACEPP = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/AU/exp_csv_files/neutral_results_all_actor_genefacepp.csv'
 
 # =================================================================================================
 
@@ -66,6 +69,25 @@ def detect_videos(video_path):
         video_path, data_type="video", skip_frames=SKIP_FRAME_NUM, face_detection_threshold=0.95, save=out_name
     )
     return video_prediction, out_name
+
+def plot_neutral_emotion_comparison(emogene_mean_dict, genefacepp_mean_dict, title="Mean Emotion Scores Comparison", fig_id='neutral_all_actors'):
+    # plot emotion means using bar graph
+    plt.figure(figsize=(10, 5))
+    bar_width = 0.35
+    x = np.arange(len(genefacepp_mean_dict))
+    plt.bar(x - bar_width/2, genefacepp_mean_dict.values(), color='blue', width=bar_width, label='GeneFace++')
+    plt.bar(x + bar_width/2, emogene_mean_dict.values(), color='red', width=bar_width, label='EmoGene')
+
+    plt.title(title)
+    plt.xlabel("Emotion")
+    plt.ylabel("Mean Score")
+    plt.xticks(x, genefacepp_mean_dict.keys(), rotation=45)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(f'{SAVE_FIG_BASE_DIR}/mean_emotion_scores_comparison_{fig_id}.png', dpi=300, bbox_inches='tight')
+    plt.close()
+
+
 
 # ... (All plotting functions like plot_emotion_means, etc. remain the same) ...
 def plot_emotion_means(genefacepp_emotion_means, emogene_emotion_means, title="Mean Emotion Scores Comparison", fig_id='xxx'):
@@ -191,10 +213,10 @@ def load_and_print_from_csv(emogene_csv_path, genefacepp_csv_path):
 
     # Print the final formatted report
     print_final_result(emogene_avg, genefacepp_avg)
-    
-def load_and_plot_from_csv(emogene_csv_path, genefacepp_csv_path):
+
+def get_avg_from_csv(emogene_csv_path, genefacepp_csv_path):
     """
-    Loads raw results from two FLAT CSV files, processes them, and generates plots.
+    Loads raw results from two FLAT CSV files, processes them, and returns the averaged DataFrames.
     """
     print(f"Loading EmoGene results from: {emogene_csv_path}")
     emogene_df = pd.read_csv(emogene_csv_path)
@@ -206,74 +228,8 @@ def load_and_plot_from_csv(emogene_csv_path, genefacepp_csv_path):
     emogene_avg = process_results(emogene_df, 'emogene')
     genefacepp_avg = process_results(genefacepp_df, 'genefacepp')
 
-    # Generate plots for each emotion
-    for emo in EMOTION_MAP.values():
-        plot_final_results(emogene_avg, genefacepp_avg, emo)
-
-
-def plot_final_results(emogene_avg, genefacepp_avg, emo):
-    title = emo.capitalize()
-    fig_id = emo
+    return emogene_avg, genefacepp_avg
     
-    emo2au_dict = {
-        'happiness': [6, 12], 'sadness': [1, 4, 15], 'anger': [4, 5, 7, 23],
-        'fear': [1, 2, 4, 5, 7, 20, 26], 'disgust': [9, 15], 'surprise': [1, 2, 5, 26]
-    }
-    
-    plot_dict_emotion_part = {}
-    plot_dict_AU_part = {}
-
-    # collect all the needed data for comparison
-    # for emotion part
-    emogene_emotion_mean = emogene_avg.filter(like=f'emotion_mean_{emo}')['emotion_mean_'+emo]
-    genefacepp_emotion_mean = genefacepp_avg.filter(like=f'emotion_mean_{emo}')['emotion_mean_'+emo]
-    plot_dict_emotion_part['Emotion Mean'] = (genefacepp_emotion_mean.values[0] if not genefacepp_emotion_mean.empty else 0,
-                                              emogene_emotion_mean.values[0] if not emogene_emotion_mean.empty else 0)
-    
-    emogene_emotion_max = emogene_avg.filter(like=f'emotion_max_{emo}')['emotion_max_'+emo]
-    genefacepp_emotion_max = genefacepp_avg.filter(like=f'emotion_max_{emo}')['emotion_max_'+emo]
-    plot_dict_emotion_part['Emotion Max'] = (genefacepp_emotion_max.values[0] if not genefacepp_emotion_max.empty else 0,
-                                             emogene_emotion_max.values[0] if not emogene_emotion_max.empty else 0)
-    # for AU part
-    for au_id in emo2au_dict[emo]:
-        # mean
-        emogene_au_mean = emogene_avg.filter(like=f'au_mean_AU{au_id:02d}')['au_mean_AU'+f'{au_id:02d}']
-        genefacepp_au_mean = genefacepp_avg.filter(like=f'au_mean_AU{au_id:02d}')['au_mean_AU'+f'{au_id:02d}']    
-        plot_dict_AU_part[f'AU{au_id:02d} Mean'] = (genefacepp_au_mean.values[0] if not genefacepp_au_mean.empty else 0,
-                                                   emogene_au_mean.values[0] if not emogene_au_mean.empty else 0)
-        # max
-        emogene_au_max = emogene_avg.filter(like=f'au_max_AU{au_id:02d}')['au_max_AU'+f'{au_id:02d}']
-        genefacepp_au_max = genefacepp_avg.filter(like=f'au_max_AU{au_id:02d}')['au_max_AU'+f'{au_id:02d}']
-        plot_dict_AU_part[f'AU{au_id:02d} Max'] = (genefacepp_au_max.values[0] if not genefacepp_au_max.empty else 0,
-                                                   emogene_au_max.values[0] if not emogene_au_max.empty else 0)
-        # std
-        emogene_au_std = emogene_avg.filter(like=f'au_std_AU{au_id:02d}')['au_std_AU'+f'{au_id:02d}']
-        genefacepp_au_std = genefacepp_avg.filter(like=f'au_std_AU{au_id:02d}')['au_std_AU'+f'{au_id:02d}']
-        plot_dict_AU_part[f'AU{au_id:02d} Std'] = (genefacepp_au_std.values[0] if not genefacepp_au_std.empty else 0,
-                                                   emogene_au_std.values[0] if not emogene_au_std.empty else 0)
-
-    # plot comparison of emotion means and AU means of the given emotion
-    # concatenate the two dicts and then plot the comparison bar graph
-    combined_plot_dict = {**plot_dict_emotion_part, **plot_dict_AU_part}
-    genefacepp_vals = [v[0] for v in combined_plot_dict.values()]
-    emogene_vals = [v[1] for v in combined_plot_dict.values()]
-    labels = list(combined_plot_dict.keys())
-    x = np.arange(len(labels))
-    bar_width = 0.35
-    plt.figure(figsize=(12, 6))
-    plt.bar(x - bar_width/2, genefacepp_vals, color='blue', width=bar_width, label='GeneFace++')
-    plt.bar(x + bar_width/2, emogene_vals, color='red', width=bar_width, label='EmoGene')
-    plt.title("Emotion & AU Scores Comparison: " + title)
-    plt.xlabel("Metrics")
-    plt.ylabel("Scores")
-    plt.xticks(x, labels, rotation=45, ha='right')
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(f'{SAVE_FIG_BASE_DIR}/final_emotion_AU_scores_comparison_{fig_id}.png', dpi=300, bbox_inches='tight')
-    plt.close()
-    
-    
-
 def print_final_result(emogene_avg, genefacepp_avg):
     """
     Print the final comparison report.
@@ -411,7 +367,15 @@ def main():
             
         emogene_avg = process_results(emogene_results_list, 'emogene')
         genefacepp_avg = process_results(genefacepp_results_list, 'genefacepp')
-        print_final_result(emogene_avg, genefacepp_avg)
+        # print_final_result(emogene_avg, genefacepp_avg)
+        
+        # avg emotion means of all emogene and GeneFace++ video
+        plot_emotion_means(
+            genefacepp_avg.filter(like='emotion_mean'), 
+            emogene_avg.filter(like='emotion_mean'), 
+            title="All Actors & Emotions", fig_id='all_actors_emotions'
+        )
+        
 
     else:
         # emogene_file = f'{SAVE_FIG_BASE_DIR}/results_emogene_RAVDESS_May_raw_flat.csv'
@@ -419,7 +383,41 @@ def main():
 
         if os.path.exists(EXISTING_CSV_FILE_PATH_EMOGENE) and os.path.exists(EXISTING_CSV_FILE_PATH_GENEFACEPP):
             # load_and_print_from_csv(EXISTING_CSV_FILE_PATH_EMOGENE, EXISTING_CSV_FILE_PATH_GENEFACEPP)
-            load_and_plot_from_csv(EXISTING_CSV_FILE_PATH_EMOGENE, EXISTING_CSV_FILE_PATH_GENEFACEPP)
+            emogene_avg, genefacepp_avg = get_avg_from_csv(EXISTING_CSV_FILE_PATH_EMOGENE, EXISTING_CSV_FILE_PATH_GENEFACEPP)
+            
+            # print(emogene_avg)
+            # print(genefacepp_avg)
+            
+            # print(genefacepp_avg.filter(like='emotion_mean'))
+            emogene_mean_dict = {}
+            genefacepp_mean_dict = {}
+            
+            for emo in EMOTION_MAP.values():
+                print(f"--- Emotion: {emo} ---")
+                print("GeneFace++ Mean:", end=' ')
+                print(genefacepp_avg.filter(like=f'emotion_mean_{emo}')['emotion_mean_'+emo].values[0])
+                genefacepp_mean_dict[emo] = genefacepp_avg.filter(like=f'emotion_mean_{emo}')['emotion_mean_'+emo].values[0]
+                print("EmoGene Mean:", end=' ')
+                print(emogene_avg.filter(like=f'emotion_mean_{emo}')['emotion_mean_'+emo].values[0])
+                emogene_mean_dict[emo] = emogene_avg.filter(like=f'emotion_mean_{emo}')['emotion_mean_'+emo].values[0]
+                
+            plot_neutral_emotion_comparison(emogene_mean_dict, genefacepp_mean_dict, title="Average Neutral Voice Generated Video Emotion Scores", fig_id='neutral_videos_all_actors')
+
+            # print(genefacepp_avg.filter(like='emotion_mean')['emotion_mean_angry'])
+            
+            # # plot the comparison figures of emotion means and AU means
+            # plot_emotion_means(
+            #     genefacepp_avg.filter(like='emotion_mean'), 
+            #     emogene_avg.filter(like='emotion_mean'), 
+            #     title="All Actors & Neutral Emotion", fig_id='all_actors_neutral_emotion'
+            # )
+            # plot_AU_means(
+            #     genefacepp_avg.filter(like='au_mean'), 
+            #     emogene_avg.filter(like='au_mean'), 
+            #     title="All Actors & Neutral Emotion", fig_id='all_actors_neutral_AU'
+            # )
+
+
         else:
             print("CSV files not found. Please run with 'RUN_FULL_DETECTION = True' first to generate them.")
 

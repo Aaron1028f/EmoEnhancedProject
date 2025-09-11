@@ -44,8 +44,8 @@ uv run webui.py --cuda_kernel --port 40000
 CUDA_VISIBLE_DEVICES=0,1,2,3 uv run webui.py --cuda_kernel --port 40000
 
 # best setting now
-CUDA_VISIBLE_DEVICES=0 uv run webui.py --cuda_kernel --port 40000
 CUDA_VISIBLE_DEVICES=0 uv run webui.py --cuda_kernel --port 40000 --fp16
+CUDA_VISIBLE_DEVICES=0 uv run webui.py --cuda_kernel --port 40000
 
 
 # run inferernce file

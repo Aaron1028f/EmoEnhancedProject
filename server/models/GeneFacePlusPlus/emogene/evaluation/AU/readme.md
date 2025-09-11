@@ -56,10 +56,18 @@ VIDEO_DIR = '/Actor_{actor_id}/03-01-0{emo_id}-02-01-02-{actor_id}.mp4' # 第二
 ```bash
 conda activate pyfeat
 
+# emotional video evaluation
 cd server/models/GeneFacePlusPlus/emogene/evaluation/AU/
-python pyfeat_eval_script.py 
+python pyfeat_eval_script.py
+
+# neutral emotion video evaluation
+cd server/models/GeneFacePlusPlus/emogene/evaluation/AU/
+python pyfeat_eval_script_neutral.py
 
 # !!! no longer use pyfeat_eval_plot.py !!!!!
+
+# run sigle video evaluation
+python eval_May_raw_vid.py
 
 ```
 
