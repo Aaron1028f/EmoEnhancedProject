@@ -1,2 +1,14 @@
-8.181488 6.305132
-10.9636755 3.3221617
+ted1_May_emogene.mp4
+LSE-D (less is better) / LSE-C(more is better)
+10.752632 / 4.3436623
+ted1_May_genefacepp.mp4
+LSE-D (less is better) / LSE-C(more is better)
+8.69821 / 6.335536
+
+
+ted2_May_emogene.mp4
+LSE-D (less is better) / LSE-C(more is better)
+9.969244 / 4.056776
+ted2_May_genefacepp.mp4
+LSE-D (less is better) / LSE-C(more is better)
+7.488046 / 6.559962

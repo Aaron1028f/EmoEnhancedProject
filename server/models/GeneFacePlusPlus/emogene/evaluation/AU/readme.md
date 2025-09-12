@@ -69,6 +69,8 @@ python pyfeat_eval_script_neutral.py
 # run sigle video evaluation
 python eval_May_raw_vid.py
 
+CUDA_VISIBLE_DEVICES=0 python eval_May_raw_vid.py
+
 ```
 
 

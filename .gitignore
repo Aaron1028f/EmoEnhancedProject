@@ -17,3 +17,6 @@
 
 # 不要忽略 .gitignore 檔案本身
 !.gitignore
+
+!assets/
+!assets/**

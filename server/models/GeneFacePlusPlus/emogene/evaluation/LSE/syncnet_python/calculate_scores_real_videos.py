@@ -34,10 +34,15 @@ flist.sort()
 
 # ==================== GET OFFSETS ====================
 
+# print(opt.videofile)
+print(os.path.basename(opt.videofile))
+
 dists = []
 for idx, fname in enumerate(flist):
     offset, conf, dist = s.evaluate(opt,videofile=fname)
-    print (str(dist)+" "+str(conf))
+    # print the filename in a fixed character space
+    print("LSE-D (less is better) / LSE-C(more is better)")
+    print (str(dist)+" / "+str(conf))
       
 # ==================== PRINT RESULTS TO FILE ====================
 

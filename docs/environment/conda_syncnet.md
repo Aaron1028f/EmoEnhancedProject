@@ -32,9 +32,16 @@ sh download_model.sh
 ### Running the evaluation scripts:
 ```bash
 # python calculate_scores_LRS.py --data_root /path/to/video/data/root --tmp_dir tmp_dir/
+conda activate syncnet
+cd server/models/GeneFacePlusPlus/emogene/evaluation/LSE/syncnet_python/
 
 # sh calculate_scores_real_videos.sh /path/to/video/data/root
 sh calculate_scores_real_videos.sh /home/aaron/project/server/models/GeneFacePlusPlus/emogene/evaluation/LSE/syncnet_python/EmoGene_eval_data
+
+
+# evaluation for ted speech videos (ted1, ted2)
+# /home/aaron/project/server/models/GeneFacePlusPlus/emogene/DATA/evaluation_usage
+sh calculate_scores_real_videos.sh /home/aaron/project/server/models/GeneFacePlusPlus/emogene/DATA/evaluation_usage
 
 ```
 
