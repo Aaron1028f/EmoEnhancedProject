@@ -6,7 +6,10 @@ from pydantic import BaseModel
 from openai import OpenAI
 
 # global state
-OPENAI_API_KEY = "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"
+from dotenv import load_dotenv
+load_dotenv()  # 讀取 .env 檔案中的環境變
+import os
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # history state and system prompt

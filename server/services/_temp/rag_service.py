@@ -1,5 +1,4 @@
 # uvicorn rag_service:app --port 8001
-OPENAI_API_KEY = "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"
 
 # # rag_service.py
 from fastapi import FastAPI
@@ -12,6 +11,10 @@ from openai import OpenAI
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.schema import Document
+from dotenv import load_dotenv
+load_dotenv()  # 讀取 .env 檔案中的環境變
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 
 EMBED_MODEL = "text-embedding-ada-002"
 INDEX_PATH  = "faiss_index"
