@@ -1,11 +1,44 @@
 # Emotion Enhanced Talking Head Bot
 
 ## EmoGene: Combining EmoTalk and GeneFace++ for Emotion-Enhanced Talking Head Generation
-See `docs/emogene.md` for more details and demo.
+See `docs/emogene.md` for more details and **[Video Demo](https://github.com/Aaron1028f/EmoEnhancedProject/blob/main/docs/emogene.md)**.
 
+Go `server/models/GeneFacePlusPlus/emogene` for code and more details of EmoGene.
+
+---
+
+### Demo of EmoGene results 
+The following pictures show the results of EmoGene given different emotions.
+
+For each picture, we provide comparisons from left to right:
+
+||`EmoGene(ours)` || `GeneFace++` || `EmoGene landmarks(ours)` || `GeneFace++ landmarks`||
+
+#### Surprised
+![alt text](assets/emogene/demo_pictures/surprised.png)
+
+#### Happy
+![alt text](assets/emogene/demo_pictures/happy.png)
+
+#### Angry
+![alt text](assets/emogene/demo_pictures/angry.png)
+
+#### Fearful
+![alt text](assets/emogene/demo_pictures/fearful.png)
+
+#### Sad
+![alt text](assets/emogene/demo_pictures/sad.png)
+
+#### Neutral
+![alt text](assets/emogene/demo_pictures/neutral.png)
+
+#### Laughter in Audio
+![alt text](assets/emogene/demo_pictures/laughter.png)
 
 ## Bot: now available: (VAD+STT)->(RAG+LLM)->(TTS)
 See `docs/note/run_all_server_client.md` for more details.
+
+
 
 **Models**
 - (VAD+STT): call chatgpt API
