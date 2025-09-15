@@ -210,6 +210,86 @@ def load_and_plot_from_csv(emogene_csv_path, genefacepp_csv_path):
     for emo in EMOTION_MAP.values():
         plot_final_results(emogene_avg, genefacepp_avg, emo)
 
+def load_and_plot_emotion_max_from_csv(emogene_csv_path, genefacepp_csv_path):
+    """
+    Loads raw results from two FLAT CSV files, processes them, and generates plots for emotion max values.
+    Plot overall emotion max comparison. From Happy, Surprise, Anger, Sadness, Fear, Disgust
+    1. emotion_max_happiness
+    2. emotion_max_surprise
+    3. emotion_max_anger
+    4. emotion_max_sadness
+    5. emotion_max_fear
+    6. emotion_max_disgust
+    """
+    print(f"Loading EmoGene results from: {emogene_csv_path}")
+    emogene_df = pd.read_csv(emogene_csv_path)
+    
+    print(f"Loading GeneFace++ results from: {genefacepp_csv_path}")
+    genefacepp_df = pd.read_csv(genefacepp_csv_path)
+
+    # Process the loaded DataFrames
+    emogene_avg = process_results(emogene_df, 'emogene')
+    genefacepp_avg = process_results(genefacepp_df, 'genefacepp')
+    
+    # --- REVISED: Loop through all emotion metrics --
+    EMOTION_KEY_AUS = {
+        'happiness': [6, 12], 'sadness': [1, 4, 15], 'anger': [4, 5, 7, 23],
+        'fear': [1, 2, 4, 5, 7, 20, 26], 'disgust': [9, 15], 'surprise': [1, 2, 5, 26]
+    }
+    emotions = list(EMOTION_KEY_AUS.keys())
+    emotion_metrics_to_print = {
+        # "Avg Emotion Mean": "emotion_mean",
+        # "Avg Emotion Std": "emotion_std",
+        "Avg Emotion MAX": "emotion_max",
+        # "Avg Emotion MIN": "emotion_min",
+    }
+    avg_emotion_max_dict = {}
+
+    for label, key_prefix in emotion_metrics_to_print.items():
+        # g_line = f"{label + ' (GeneFace++)':<{left_col_width}}"
+        # e_line = f"{label + ' (EmoGene)':<{left_col_width}}"
+        
+        for emotion in emotions:
+            # emotion_width = len(EMOTION_KEY_AUS[emotion]) * col_width
+            col_name = f"{key_prefix}_{emotion}"
+            
+            g_val = genefacepp_avg.loc[emotion, col_name] if col_name in genefacepp_avg.columns else 0
+            e_val = emogene_avg.loc[emotion, col_name] if col_name in emogene_avg.columns else 0
+            
+            # Use centered alignment for the values
+            # g_line += f"|{f'{g_val:.3f}':^{emotion_width}}"
+            # e_line += f"|{f'{e_val:.3f}':^{emotion_width}}"
+            avg_emotion_max_dict[emotion] = (g_val, e_val)
+            
+            
+        # report += f"{g_line}\n{e_line}\n"
+    # report += "\n"
+
+
+    plot_emotion_means_only_for_single_item_comparison(
+        avg_emotion_max_dict, title="Overall Emotion Max Scores Comparison Using Different Emotional Audio Input", fig_id='overall_emotion_max_scores_comparison'
+    )
+
+def plot_emotion_means_only_for_single_item_comparison(avg_emotion_max_dict, title="Mean Emotion Scores Comparison", fig_id='xxx'):
+    # plot emotion means using bar graph
+    plt.figure(figsize=(8, 4))
+    bar_width = 0.35
+    x = np.arange(len(avg_emotion_max_dict))
+    
+    genefacepp_vals = [v[0] for v in avg_emotion_max_dict.values()]
+    emogene_vals = [v[1] for v in avg_emotion_max_dict.values()]
+    labels = list(avg_emotion_max_dict.keys())
+    
+    plt.bar(x - bar_width/2, genefacepp_vals, color='blue', width=bar_width, label='GeneFace++')
+    plt.bar(x + bar_width/2, emogene_vals, color='red', width=bar_width, label='EmoGene(Ours)')
+    plt.title(title)
+    plt.xlabel("Emotion")
+    plt.ylabel("Mean Max Score")
+    plt.xticks(x, labels, rotation=45)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(f'{SAVE_FIG_BASE_DIR}/{fig_id}.png', dpi=300, bbox_inches='tight')
+    plt.close()
 
 def plot_final_results(emogene_avg, genefacepp_avg, emo):
     title = emo.capitalize()
@@ -419,7 +499,8 @@ def main():
 
         if os.path.exists(EXISTING_CSV_FILE_PATH_EMOGENE) and os.path.exists(EXISTING_CSV_FILE_PATH_GENEFACEPP):
             # load_and_print_from_csv(EXISTING_CSV_FILE_PATH_EMOGENE, EXISTING_CSV_FILE_PATH_GENEFACEPP)
-            load_and_plot_from_csv(EXISTING_CSV_FILE_PATH_EMOGENE, EXISTING_CSV_FILE_PATH_GENEFACEPP)
+            # load_and_plot_from_csv(EXISTING_CSV_FILE_PATH_EMOGENE, EXISTING_CSV_FILE_PATH_GENEFACEPP)
+            load_and_plot_emotion_max_from_csv(EXISTING_CSV_FILE_PATH_EMOGENE, EXISTING_CSV_FILE_PATH_GENEFACEPP)
         else:
             print("CSV files not found. Please run with 'RUN_FULL_DETECTION = True' first to generate them.")
 
