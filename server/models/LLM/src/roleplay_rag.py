@@ -24,8 +24,9 @@ from langchain_community.vectorstores import FAISS
 LLM_PROVIDER = "openai"  # 可選 "openai" 或 "gemini"
 GEMINI_MODEL_NAME = "gemini-2.5-flash"
 # GEMINI_MODEL_NAME = "gemini-2.5-flash-lite-preview-06-17"
-# CHATGPT_MODEL_NAME = "gpt-4.1" # "gpt-4.1-mini" is also good for fast response"gpt-5-nano"
-CHATGPT_MODEL_NAME = "gpt-5-mini-2025-08-07"  # "gpt-4o" is also good for better answer
+# CHATGPT_MODEL_NAME = "gpt-4.1-mini" # "gpt-4.1-mini" is also good for fast response"gpt-5-nano"
+# CHATGPT_MODEL_NAME = "gpt-5-nano"  # "gpt-4o" is also good for better answer
+CHATGPT_MODEL_NAME = "gpt-5-chat-latest"  # "gpt-4o" is also good for better answer
 
 FAISS_INDEX_PATH = "faiss_index_qa_openai"
 JSON_DATA_PATH = "QAdata.json"
@@ -56,6 +57,9 @@ SYSTEM_PROMPT_TEMPLATE = f"""
 ## 你的任務
 接下來，使用者會提供一些「相關記憶」和一個「當前問題」。
 你的任務是消化這些記憶，並嚴格以你的人格身份，對「當前問題」做出回應。
+
+## 回答長度限制
+在100字內回答
 
 """
 # # 注意: 回答需要在100字以內，並且要簡潔明瞭。
@@ -140,7 +144,14 @@ def get_llm_and_embeddings(provider="openai"):
         if not os.getenv("OPENAI_API_KEY"):
             raise ValueError("錯誤：找不到 OPENAI_API_KEY。請在 .env 檔案中設定。")
         # llm = ChatOpenAI(model=CHATGPT_MODEL_NAME, temperature=1, max_tokens=1024, streaming=True)
-        llm = ChatOpenAI(model=CHATGPT_MODEL_NAME)
+        reasoning = {
+            "effort": "minimal",  # 'low', 'medium', or 'high'
+            "summary": None,  # 'detailed', 'auto', or None
+        }
+        # llm = ChatOpenAI(model="o4-mini", reasoning=reasoning, output_version="responses/v1")
+        # llm = ChatOpenAI(model=CHATGPT_MODEL_NAME, reasoning=reasoning, streaming=True, output_version="responses/v1")
+        llm = ChatOpenAI(model=CHATGPT_MODEL_NAME, streaming=True)
+        
         embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
     elif provider == "gemini":
         print("✨ 使用 Google Gemini 模型...")

@@ -292,27 +292,43 @@ class IndexTTS2:
         if self.gr_progress is not None:
             self.gr_progress(value, desc=desc)
     # ==============================================================================
-    def _process_text_emotion_tags(self, text):
+    def _process_text_emotion_tags(self, text: str):
         """
         Process the input text to extract and handle emotion tags.
         Args:
             text (str): The input text containing potential emotion tags.
         Returns:
             processed_text (str): The text with emotion tags removed.
-            emo_tag (str): The extracted emotion tag, or None if not found.
+            emo_tag (str): The extracted emotion tag, or <emo:neutral> if not found.
         """
-        EMO_TAGS = ["<emo:neutral>", "<emo:happy>", "<emo:sad>", "<emo:angry>", "<emo:surprised>", "<emo:fearful>", "<emo:disgusted>"]
-        processed_text = text
-        emo_tag = "<emo:neutral>"  # default emotion
-        use_emo_text = False
+        # 支援的情緒標籤（標準化為小寫）
+        EMO_SET = {"neutral", "happy", "sad", "angry", "surprised", "fearful", "disgusted"}
+        # 允許大小寫與空白：<emo:happy>、<EMO : HAPPY> 都能匹配
+        pattern = re.compile(
+            r"<\s*emo\s*:\s*(neutral|happy|sad|angry|surprised|fearful|disgusted)\s*>",
+            re.IGNORECASE,
+        )
 
-        for tag in EMO_TAGS:
-            if tag in text:
-                emo_tag = tag
-                use_emo_text = True
-                processed_text = processed_text.replace(tag, "")
+        emo_tag = "<emo:neutral>"  # 預設情緒
+        # 找到第一個出現的標籤（以原文字順序為準）
+        first = None
+        for m in pattern.finditer(text):
+            val = m.group(1).lower()
+            if val in EMO_SET:
+                first = val
                 break
+        if first is not None:
+            emo_tag = f"<emo:{first}>"
+
+        # 移除所有情緒標籤
+        processed_text = pattern.sub("", text)
+
+        # 清理多餘空白與標點前的空白
+        processed_text = re.sub(r"\s+", " ", processed_text)                  # 合併多重空白
+        processed_text = re.sub(r"\s+([,.;:!?\u3001\u3002\uff01\uff1f\uff0c\uff1b\uff1a])", r"\1", processed_text)
+
         return processed_text.strip(), emo_tag
+
     
     def _select_emo_audio_prompt(self, emo_tag):
         """
@@ -336,7 +352,9 @@ class IndexTTS2:
             "<emo:neutral>": "examples/RAVDESS/actor19/neutral.wav",
             # "<emo:happy>": "examples/RAVDESS/actor19/happy.wav",
             "<emo:happy>": "examples/RAVDESS/actor19/happy2.wav",  # actor19的happy音频有问题，换成actor20的
-            "<emo:sad>": "examples/RAVDESS/actor19/sad.wav",
+            # "<emo:sad>": "examples/RAVDESS/actor19/sad.wav",
+            "<emo:sad>": "examples/RAVDESS/actor19/sad2.wav",
+            
             "<emo:angry>": "examples/RAVDESS/actor19/angry.wav",
             "<emo:surprised>": "examples/RAVDESS/actor19/surprised.wav",
             "<emo:fearful>": "examples/RAVDESS/actor19/fearful.wav",

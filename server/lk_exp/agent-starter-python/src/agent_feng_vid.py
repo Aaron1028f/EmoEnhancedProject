@@ -82,6 +82,7 @@ async def entrypoint(ctx: JobContext):
         turn_detection=MultilingualModel(),
         vad=ctx.proc.userdata["vad"],
         preemptive_generation=True,
+        # preemptive_generation=False,  # for testing emo TTS
     )
     
     # sometimes background noise could interrupt the agent session, these are considered false positive interruptions
