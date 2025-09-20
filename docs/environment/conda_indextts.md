@@ -56,6 +56,13 @@ CUDA_VISIBLE_DEVICES=0 uv run webui.py --cuda_kernel --port 40000
 # RTF ~= 1.0 (??)
 CUDA_VISIBLE_DEVICES=0 uv run webui.py --cuda_kernel --port 40000 --deepspeed
 
+# # 已 conda activate indextts
+# CUDA_HOME=/home/aaron/.conda/envs/indextts \
+# PATH=/home/aaron/.conda/envs/indextts/bin:$PATH \
+# LD_LIBRARY_PATH=/home/aaron/.conda/envs/indextts/lib:/home/aaron/.conda/envs/indextts/lib64:$LD_LIBRARY_PATH \
+# uv run webui.py --cuda_kernel --port 40010
+
+
 
 # run inferernce file
 uv run indextts/infer_v2.py
@@ -72,7 +79,7 @@ CUDA_VISIBLE_DEVICES=0 uv run indextts/api_indextts.py --cuda_kernel --port 4000
 
 
 ## solve problems
-### deepspeed CUDA error
+### deepspeed CUDA error (not ok yet)
 ```bash
 # edit the bashrc file
 code ~/.bashrc
@@ -90,6 +97,36 @@ source ~/.bashrc
 # https://github.com/index-tts/index-tts/issues/164#issuecomment-2903453206
 # https://anaconda.org/conda-forge/ninja
 # conda install conda-forge::ninja # (not needed)
+
+
+# final solution (for ninja):
+# https://blog.csdn.net/Mugi_jiang/article/details/140355030
+# modify the code in the virtual environment
+/home/aaron/project/server/models/TTS/index-tts/.venv/lib/python3.10/site-packages/torch/utils/cpp_extension.py
+
+def _run_ninja_build(build_directory: str, verbose: bool, error_prefix: str) -> None:
+    # command = ['ninja', '-v']
+    command = ['ninja', '--version']
+
+
+# # final solution (for transformer_inference):
+# https://github.com/index-tts/index-tts/issues/305
+# transformers==4.52.4
+
+# # 指定版本並更新鎖檔
+# uv add transformers==4.52.4
+
+# # 如需重新解析所有相依
+# uv sync
+
+# # 驗證
+# uv run python -c "import transformers,sys;print(transformers.__version__)"
+
+
+# # gradio error
+# uv add gradio==5.45.0
+# uv pip install -U "transformers==4.52.4"
+
 
 
 ```

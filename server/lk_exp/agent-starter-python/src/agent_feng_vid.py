@@ -23,8 +23,8 @@ from livekit.plugins.turn_detector.multilingual import MultilingualModel
 # local services
 from localLLM import LocalLLM
 
-from localTTS_GPTSoVITS import LocalTTS
-# from localTTS_indextts import LocalTTS
+# from localTTS_GPTSoVITS import LocalTTS
+from localTTS_indextts import LocalTTS
 
 
 logger = logging.getLogger("agent")

@@ -19,6 +19,7 @@ app_state = AppState()
 async def roleplay_streamer(user_input: str):
     full_response = ""
     stream_input = {"input": user_input, "chat_history": app_state.chat_history}
+    print("User input:", user_input)
 
     if not app_state.roleplay_chain:
         yield "data: {\"error\": \"Roleplay chain not initialized.\"}\n\n"

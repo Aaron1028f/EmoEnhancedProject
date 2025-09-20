@@ -291,7 +291,62 @@ class IndexTTS2:
     def _set_gr_progress(self, value, desc):
         if self.gr_progress is not None:
             self.gr_progress(value, desc=desc)
+    # ==============================================================================
+    def _process_text_emotion_tags(self, text):
+        """
+        Process the input text to extract and handle emotion tags.
+        Args:
+            text (str): The input text containing potential emotion tags.
+        Returns:
+            processed_text (str): The text with emotion tags removed.
+            emo_tag (str): The extracted emotion tag, or None if not found.
+        """
+        EMO_TAGS = ["<emo:neutral>", "<emo:happy>", "<emo:sad>", "<emo:angry>", "<emo:surprised>", "<emo:fearful>", "<emo:disgusted>"]
+        processed_text = text
+        emo_tag = "<emo:neutral>"  # default emotion
+        use_emo_text = False
 
+        for tag in EMO_TAGS:
+            if tag in text:
+                emo_tag = tag
+                use_emo_text = True
+                processed_text = processed_text.replace(tag, "")
+                break
+        return processed_text.strip(), emo_tag
+    
+    def _select_emo_audio_prompt(self, emo_tag):
+        """
+        Select the appropriate emo_audio_prompt based on the detected emo_tag.
+        Args:
+            emo_tag (str): The detected emotion tag.
+        Returns:
+            emo_audio_prompt (str): The path to the corresponding emotion audio prompt.
+        """
+        emo_audio_prompts_actor20 = {
+            "<emo:neutral>": "examples/RAVDESS/actor20/neutral.wav",
+            "<emo:happy>": "examples/RAVDESS/actor20/happy.wav",
+            "<emo:sad>": "examples/RAVDESS/actor20/sad.wav",
+            "<emo:angry>": "examples/RAVDESS/actor20/angry.wav",
+            "<emo:surprised>": "examples/RAVDESS/actor20/surprised.wav",
+            "<emo:fearful>": "examples/RAVDESS/actor20/fearful.wav",
+            "<emo:disgusted>": "examples/RAVDESS/actor20/disgusted.wav"
+        }
+        
+        emo_audio_prompts_actor19 = {
+            "<emo:neutral>": "examples/RAVDESS/actor19/neutral.wav",
+            # "<emo:happy>": "examples/RAVDESS/actor19/happy.wav",
+            "<emo:happy>": "examples/RAVDESS/actor19/happy2.wav",  # actor19的happy音频有问题，换成actor20的
+            "<emo:sad>": "examples/RAVDESS/actor19/sad.wav",
+            "<emo:angry>": "examples/RAVDESS/actor19/angry.wav",
+            "<emo:surprised>": "examples/RAVDESS/actor19/surprised.wav",
+            "<emo:fearful>": "examples/RAVDESS/actor19/fearful.wav",
+            "<emo:disgusted>": "examples/RAVDESS/actor19/disgusted.wav"
+        }
+        emo_audio_prompts = emo_audio_prompts_actor19 
+        
+        return emo_audio_prompts.get(emo_tag, "checkpoints/emo_prompts/neutral.wav")
+    # =============================================================================
+    
     # 原始推理模式
     def infer(self, spk_audio_prompt, text, output_path,
               emo_audio_prompt=None, emo_alpha=1.0,
@@ -299,7 +354,25 @@ class IndexTTS2:
               use_emo_text=False, emo_text=None, use_random=False, interval_silence=200,
               verbose=False, max_text_tokens_per_segment=120, **generation_kwargs):
         print(">> starting inference...")
-        print(f'inference text: {text}')
+        # ===============================================================================
+        print(f'inference text (raw): {text}')
+        # hardcode the spk_audio_prompt for testing
+        # spk_audio_prompt = self._select_emo_audio_prompt("<emo:neutral>")
+        emo_alpha = 0.5
+        spk_audio_prompt = 'examples/Feng/Feng_neutral.wav'
+
+        # preprocess the text with emotion tags
+        text, llm_emo_tag = self._process_text_emotion_tags(text)
+        print(f'inference text (processed): {text}, detected emo_tag: {llm_emo_tag}')
+        
+        # choose the emo_audio_prompt based on the detected emo_tag
+        emo_audio_prompt = self._select_emo_audio_prompt(llm_emo_tag)
+        
+        print(f'using spk_audio_prompt: {spk_audio_prompt}')
+        print(f'using emo_audio_prompt: {emo_audio_prompt}')
+        
+        # ===============================================================================
+        
         # 檢查是否有 output_path，串流模式下不應直接存檔
         is_streaming = output_path is None        
         

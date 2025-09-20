@@ -75,3 +75,11 @@ cd server/lk_exp/server_src_bin/
 # just use run live server using vscode plug-in
 
 ```
+
+## RUN SINGLE DEMO APP
+```bash
+# run TTS server (index-tts2), slower but higher quality (also with emotion control support)
+cd server/models/TTS/index-tts
+conda activate indextts
+CUDA_VISIBLE_DEVICES=0 uv run webui.py --cuda_kernel --port 40010
+```

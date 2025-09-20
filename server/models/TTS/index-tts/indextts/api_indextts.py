@@ -31,7 +31,8 @@ import wave
 
 # --- 從您的串流版本 infer 檔案中匯入 ---
 # 確保您的檔案名為 infer_v2_streaming.py
-from indextts.infer_v2_streaming import IndexTTS2
+# from indextts.infer_v2_streaming import IndexTTS2
+from indextts.infer_v2_streaming_emo import IndexTTS2
 
 # --- 全域變數與初始化 ---
 parser = argparse.ArgumentParser(description="IndexTTS API")
