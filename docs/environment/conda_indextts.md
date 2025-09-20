@@ -49,12 +49,12 @@ CUDA_VISIBLE_DEVICES=0 uv run webui.py --cuda_kernel --port 40000 --fp16
 CUDA_VISIBLE_DEVICES=0 uv run webui.py --cuda_kernel --port 40000 --deepspeed
 #################################################################################
 # RTF ~= 0.9 (This one runs the fastest in testing)
-CUDA_VISIBLE_DEVICES=0 uv run webui.py --cuda_kernel --port 40000 --deepspeed
+CUDA_VISIBLE_DEVICES=0 uv run webui.py --cuda_kernel --port 40000
 #################################################################################
 
 
 # RTF ~= 1.0 (??)
-CUDA_VISIBLE_DEVICES=0 uv run webui.py --cuda_kernel --port 40000 --deepspeed --fp16
+CUDA_VISIBLE_DEVICES=0 uv run webui.py --cuda_kernel --port 40000 --deepspeed
 
 
 # run inferernce file
@@ -71,7 +71,8 @@ CUDA_VISIBLE_DEVICES=0 uv run indextts/api_indextts.py --cuda_kernel --port 4000
 
 
 
-## solve deepspeed CUDA error
+## solve problems
+### deepspeed CUDA error
 ```bash
 # edit the bashrc file
 code ~/.bashrc
@@ -84,5 +85,11 @@ export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
 
 # save the file and restart the terminal
 source ~/.bashrc
+
+# ====================================================
+# https://github.com/index-tts/index-tts/issues/164#issuecomment-2903453206
+# https://anaconda.org/conda-forge/ninja
+# conda install conda-forge::ninja # (not needed)
+
 
 ```

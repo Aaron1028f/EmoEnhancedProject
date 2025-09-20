@@ -25,13 +25,15 @@ python api_v2_lk_save_wav.py
 # run TTS server (index-tts2), slower but higher quality (also with emotion control support)
 cd server/models/TTS/index-tts
 conda activate indextts
-CUDA_VISIBLE_DEVICES=0 uv run indextts/api_indextts.py --cuda_kernel --port 40000 --deepspeed
+CUDA_VISIBLE_DEVICES=0 uv run indextts/api_indextts.py --cuda_kernel --port 40000
 # =====================================================================
 # =====================================================================
 # run EmoGene server
 conda activate geneface_py310
 cd server/models/GeneFacePlusPlus/
-python emogene/realtime/emogene_lk_server.py
+# python emogene/realtime/emogene_lk_server.py (with no placeholder image)
+python emogene/realtime/emogene_lk_server2.py
+
 # =====================================================================
 # =====================================================================
 ```
