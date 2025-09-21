@@ -1,0 +1,634 @@
+{
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0000415680_0000543040.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999797344207764
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0001029440_0001184960.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0001184960_0001358400.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999992847442627
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0001508160_0001674880.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999790191650391
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0001674880_0001811840.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0001811840_0001938880.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999935626983643
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0001944960_0002190080.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999978542327881
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0002190080_0002354560.wav": {
+    "emotion": "happy",
+    "emotion_score": 0.9998772144317627
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0002369280_0002497280.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9952449202537537
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0002501760_0002728320.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9998297691345215
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0002728320_0002821440.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9991297125816345
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0002848960_0003011520.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999381303787231
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0003026560_0003163200.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9903842210769653
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0003163200_0003346240.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.999776303768158
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0003347200_0003550080.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999792575836182
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0003550080_0003666240.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0003846720_0003968960.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9380375146865845
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0003992000_0004164800.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999967813491821
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0004170880_0004326720.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0004345600_0004469760.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999253749847412
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0004504960_0004642560.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999971389770508
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0004657920_0004822400.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9996052384376526
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0004822400_0004947840.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9997029900550842
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0004947840_0005056640.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9997425675392151
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0005094720_0005232320.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.952153742313385
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0005232320_0005549440.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0005549440_0005720960.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9967148303985596
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0005720960_0005865280.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9904029369354248
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0005865280_0006023040.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9990703463554382
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0006033280_0006184320.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0006192640_0006330880.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9975228905677795
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0006330880_0006520320.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9889495372772217
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0006520320_0006669440.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.999993085861206
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0006671680_0006830720.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9996527433395386
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0006832320_0006971520.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9977847933769226
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0006983360_0007120000.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999860525131226
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0007121280_0007313600.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0007485120_0007604160.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9952813982963562
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0007752320_0007878080.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999995231628418
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0007890880_0007994240.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9938976168632507
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0008013120_0008196800.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999884366989136
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0008196800_0008318080.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9987637996673584
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0008328000_0008465600.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999920129776001
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0008469760_0008603200.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.8709321618080139
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0008613760_0008853760.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0008853760_0009025280.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999992847442627
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0009025280_0009156160.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9990173578262329
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0009156160_0009312000.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999786615371704
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0009312000_0009559040.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0009559040_0009712000.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999896287918091
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0009712000_0009853120.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9997804760932922
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0010022080_0010146560.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999982118606567
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0010146560_0010308160.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999997615814209
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0010324800_0010499200.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9963478446006775
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0010527360_0010683840.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999637603759766
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0010847040_0011034880.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.7757070064544678
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0011034880_0011238080.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9985431432723999
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0011422720_0011579200.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9627394676208496
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0011579200_0011738560.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9995152950286865
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0011738560_0011881280.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0011881280_0011996800.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9995808005332947
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0011998080_0012170240.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.999737560749054
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0012311040_0012478400.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999839067459106
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0012493760_0012640640.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999997615814209
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0012640640_0012783360.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999806880950928
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0012783360_0012920320.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999945163726807
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0012920320_0013096000.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999998807907104
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0013112320_0013328000.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999997615814209
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0013351360_0013505920.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9998264908790588
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0013505920_0013672640.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0013672640_0013820160.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999988079071045
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0013828800_0013990720.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999905824661255
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0014110080_0014301440.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999774694442749
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0014310720_0014485120.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0014485120_0014612160.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0014612160_0014788160.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999998807907104
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0014788160_0014947520.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0014947520_0015090880.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999997615814209
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0015090880_0015241920.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9927701354026794
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0015241920_0015399040.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9891257286071777
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0015413120_0015513600.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9897720217704773
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0015537280_0015707200.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.7981007099151611
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0015710720_0015880320.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999865293502808
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0016233920_0016386240.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9997085928916931
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0016386240_0016546240.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999985694885254
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0016546240_0016687680.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999998807907104
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0016687680_0016835840.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999933242797852
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0016845120_0016968320.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0017015040_0017159040.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999997615814209
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0017159040_0017320000.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9930347204208374
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0017320000_0017473920.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999998807907104
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0017614400_0017790400.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0017804480_0017937280.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999998807907104
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0017940160_0018097920.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9997591376304626
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0018099200_0018271680.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0018714560_0018858560.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999078512191772
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0018872640_0019053760.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999626874923706
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0019065280_0019199360.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0019211840_0019385920.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999984502792358
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0019385920_0019535040.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999921321868896
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0019535040_0019689600.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0019697280_0019834240.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0019834240_0019952320.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0019965120_0020120320.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9998687505722046
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0020288640_0020520640.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999620914459229
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0020520640_0020646080.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.999549925327301
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0020677760_0020868800.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9975643157958984
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0020868800_0021007680.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9433197975158691
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0021047680_0021237760.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0021259840_0021402560.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999829530715942
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0021402560_0021543680.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0021912320_0022064960.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999988079071045
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0022064960_0022228800.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9923402070999146
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0022395200_0022570560.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999003410339355
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0022585600_0022719360.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999967813491821
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0022719360_0022835840.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0023000320_0023139200.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999994039535522
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0023139200_0023310080.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9987523555755615
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0023310080_0023453760.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0023453760_0023573760.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999599456787109
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0023588800_0023750720.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9851978421211243
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0023756800_0023884800.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999997615814209
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0023897280_0024050240.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999920129776001
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0024250560_0024385280.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.999906063079834
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0024404160_0024531520.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999988079071045
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0024531520_0024664640.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0024668800_0024816640.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0024816640_0024956480.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999476671218872
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0024957120_0025113600.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0025131840_0025272640.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9925170540809631
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0025278400_0025406080.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999997615814209
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0025406080_0025581120.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999963045120239
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0025758400_0025899840.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9967730641365051
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0025919040_0026088960.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.67295241355896
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0026088960_0026265600.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9733259677886963
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0026286080_0026487040.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0026526080_0026666560.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999969005584717
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0026669120_0026788480.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999725818634033
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0026939840_0027167360.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0027203520_0027349760.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9955987930297852
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0027355840_0027478400.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.999735414981842
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0027480960_0027643200.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999971389770508
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0027644160_0027804480.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999949932098389
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0027810240_0027921280.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999973773956299
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0028094080_0028232000.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0029157760_0029316480.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9954764246940613
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0029316480_0029454400.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999580383300781
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0029454400_0029631680.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999603033065796
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0029631680_0029767360.wav": {
+    "emotion": "happy",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0029767360_0029905600.wav": {
+    "emotion": "happy",
+    "emotion_score": 0.9078255891799927
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0029905600_0030032000.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999971389770508
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0030338560_0030471040.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999974966049194
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0030482880_0030608000.wav": {
+    "emotion": "happy",
+    "emotion_score": 0.5753272175788879
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0030616320_0030788160.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999547004699707
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0030788160_0030920320.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999793767929077
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0031045440_0031203200.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9999982118606567
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0031210560_0031368000.wav": {
+    "emotion": "neutral",
+    "emotion_score": 1.0
+  },
+  "/home/aaron/project/server/models/TTS/GPT-SoVITS/DATA/Feng_EP32/slicer/Feng_live_EP32.wav_0031393920_0031540480.wav": {
+    "emotion": "neutral",
+    "emotion_score": 0.9623525738716125
+  }
+}
