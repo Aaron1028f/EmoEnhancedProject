@@ -51,6 +51,11 @@ audio_track: rtc.LocalAudioTrack | None = None
 idle_task: asyncio.Task | None = None
 placeholder_rgba: np.ndarray | None = None  # (H,W,4)
 
+# 新增：記錄 persistent source 尺寸，與是否啟用「最後一幀當 idle」
+persistent_width: int | None = None
+persistent_height: int | None = None
+KEEP_LAST_FRAME_ON_IDLE = True
+
 WHITE = (255, 255, 255)
 GREY = (200, 200, 200)
 
@@ -62,6 +67,7 @@ def _make_placeholder_rgba(width: int, height: int, color=GREY) -> np.ndarray:
 
 async def ensure_persistent_tracks(room_name: str, width: int = 512, height: int = 512, sr: int = 16000, ch: int = 1):
     global persistent_room, video_source, audio_source, video_track, audio_track, placeholder_rgba
+    global persistent_width, persistent_height
     if placeholder_rgba is None:
         placeholder_rgba = _make_placeholder_rgba(width, height)
 
@@ -86,6 +92,8 @@ async def ensure_persistent_tracks(room_name: str, width: int = 512, height: int
     if video_source is None or audio_source is None:
         video_source = rtc.VideoSource(width=width, height=height)
         audio_source = rtc.AudioSource(sample_rate=sr, num_channels=ch, queue_size_ms=1000)
+        # 記錄 persistent 尺寸
+        persistent_width, persistent_height = width, height
 
         video_track = rtc.LocalVideoTrack.create_video_track("video", video_source)
         audio_track = rtc.LocalAudioTrack.create_audio_track("audio", audio_source)
@@ -190,6 +198,27 @@ async def play_file_persistent(video_path: str, publish_audio: bool = True):
         await av_sync.wait_for_playout()
         av_sync.reset()
         logger.info("file playback finished")
+
+        # 新增：影片播放完後，若啟用，將最後一幀用作 idle 的 placeholder
+        if KEEP_LAST_FRAME_ON_IDLE and streamer.last_rgba is not None:
+            try:
+                lw, lh = streamer.last_rgba.shape[1], streamer.last_rgba.shape[0]
+                if persistent_width is not None and persistent_height is not None and \
+                   lw == persistent_width and lh == persistent_height:
+                    # 尺寸相符才替換
+                    # 注意：需確保為 (H,W,4) uint8 RGBA
+                    if streamer.last_rgba.dtype == np.uint8 and streamer.last_rgba.shape[2] == 4:
+                        # copy 避免後續被覆寫
+                        # 使用 global placeholder_rgba
+                        global placeholder_rgba
+                        placeholder_rgba = streamer.last_rgba.copy()
+                        logger.info("idle placeholder updated to last frame")
+                else:
+                    logger.info("last frame size %sx%s != persistent %sx%s, keep old placeholder",
+                                lw, lh, persistent_width, persistent_height)
+            except Exception:
+                logger.exception("update placeholder to last frame failed")
+
     finally:
         await streamer.aclose()
         await av_sync.aclose()
@@ -534,6 +563,8 @@ class MediaFileStreamer:
             audio_sample_rate=audio_stream.sample_rate,
             audio_channels=audio_stream.channels,
         )
+        # 新增：記錄最後一幀 RGBA
+        self.last_rgba: np.ndarray | None = None
 
     @property
     def info(self) -> MediaInfo:
@@ -546,6 +577,8 @@ class MediaFileStreamer:
             frame = av_frame.to_rgb().to_ndarray()
             frame_rgba = np.ones((frame.shape[0], frame.shape[1], 4), dtype=np.uint8)
             frame_rgba[:, :, :3] = frame
+            # 更新最後一幀
+            self.last_rgba = frame_rgba
             yield (
                 rtc.VideoFrame(
                     width=frame.shape[1],
