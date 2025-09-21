@@ -35,6 +35,8 @@ from transformers import SeamlessM4TFeatureExtractor
 import random
 import torch.nn.functional as F
 
+import requests
+
 class IndexTTS2:
     def __init__(
             self, cfg_path="checkpoints/config.yaml", model_dir="checkpoints", use_fp16=False, device=None,
@@ -363,6 +365,71 @@ class IndexTTS2:
         emo_audio_prompts = emo_audio_prompts_actor19 
         
         return emo_audio_prompts.get(emo_tag, "checkpoints/emo_prompts/neutral.wav")
+
+    def _RAG_based_emo_speech_prompt_selection(self, query_text: str, desired_emotion='neutral', emotion_mode='off'):
+        """
+        透過外部 Audio RAG 服務，根據文字語義（與可選的情緒）挑選對應的情緒語音樣本路徑。
+        回傳值：可用作 emo_audio_prompt 的 .wav 檔絕對路徑；若失敗則回退內建樣本。
+        """
+        # 將 "<emo:happy>" 或 "happy" 正規化為 "happy"
+        def norm_emotion(x):
+            if not x:
+                return None
+            x = str(x).strip().lower()
+            m = re.match(r"<\s*emo\s*:\s*([a-z]+)\s*>", x)
+            if m:
+                x = m.group(1)
+            # 同義詞/映射
+            syn = {"afraid": "fearful", "calm": "neutral", "melancholic": "sad"}
+            return syn.get(x, x)
+
+        want = norm_emotion(desired_emotion)
+        # use_emo = want is not None and want != "neutral"
+        use_emo = want is not None
+
+        base_url = os.environ.get("AUDIO_RAG_BASE_URL", "http://127.0.0.1:45000").rstrip("/")
+        url = f"{base_url}/retrieve"
+        payload = {
+            "query": query_text,
+            "k": 3,
+            "desired_emotion": want if use_emo else None,
+            "emotion_mode": "soft" if use_emo else "off",
+        }
+
+        try:
+            r = requests.post(url, json=payload, timeout=8)
+            r.raise_for_status()
+            data = r.json()
+            hits = data.get("hits") or []
+            if not hits:
+                raise RuntimeError("empty hits from RAG")
+
+            # 若有情緒需求，優先挑選情緒完全相符者，其次取第一筆
+            chosen = None
+            emo_is_matched = False
+            if use_emo:
+                for h in hits:
+                    if (h.get("emotion") or "").lower() == want:
+                        chosen = h
+                        emo_is_matched = True
+                        print(f">> RAG found matching emo prompt")
+                        break
+            if chosen is None:
+                chosen = hits[0]
+                print(f">> RAG chose first prompt (no exact emo match) ")
+
+            audio_path = (chosen.get("audio_path") or "").strip()
+            if audio_path and os.path.exists(audio_path):
+                print(f">> RAG selected emo prompt: {audio_path} (emo={chosen.get('emotion')}, score={chosen.get('score')})")
+                return audio_path, emo_is_matched
+            else:
+                raise FileNotFoundError(f"RAG returned file not found: {audio_path}")
+
+        except Exception as e:
+            print(f">> RAG prompt selection failed: {e} ; falling back to builtin prompts.")
+            # 失敗回退：使用內建樣本
+            tag = f"<emo:{want}>" if want else "<emo:neutral>"
+            return self._select_emo_audio_prompt(tag), True
     # =============================================================================
     
     # 原始推理模式
@@ -384,7 +451,20 @@ class IndexTTS2:
         print(f'inference text (processed): {text}, detected emo_tag: {llm_emo_tag}')
         
         # choose the emo_audio_prompt based on the detected emo_tag
-        emo_audio_prompt = self._select_emo_audio_prompt(llm_emo_tag)
+            # simple version: fixed set of prompts
+            # emo_audio_prompt = self._select_emo_audio_prompt(llm_emo_tag)
+        
+        # advanced version: RAG-based prompt selection
+        start_rag_time = time.perf_counter()
+        emo_audio_prompt, emo_is_matched = self._RAG_based_emo_speech_prompt_selection(text, llm_emo_tag)
+        end_rag_time = time.perf_counter()
+        print(f'RAG prompt selection took {end_rag_time - start_rag_time:.2f} seconds')
+        if emo_is_matched:
+            print(f'RAG selected emo_audio_prompt matched the desired emotion: {emo_audio_prompt}')
+        else:
+            print(f'RAG selected emo_audio_prompt did NOT match the desired emotion: {emo_audio_prompt}')
+            emo_audio_prompt = self._select_emo_audio_prompt(llm_emo_tag)  # 強制改用內建樣本
+            print(f'Fallback to built-in emo_audio_prompt: {emo_audio_prompt}')
         
         print(f'using spk_audio_prompt: {spk_audio_prompt}')
         print(f'using emo_audio_prompt: {emo_audio_prompt}')

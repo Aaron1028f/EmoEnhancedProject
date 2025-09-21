@@ -23,9 +23,9 @@ def cmd_reindex(base_url: str):
     print(json.dumps(resp, ensure_ascii=False, indent=2))
 
 
-def cmd_retrieve(base_url: str, query: str, k: int):
+def cmd_retrieve(base_url: str, query: str, k: int, desired_emotion: str = None, emotion_mode: str = "off"):
     url = f"{base_url.rstrip('/')}/retrieve"
-    payload = {"query": query, "k": k}
+    payload = {"query": query, "k": k, "desired_emotion": desired_emotion, "emotion_mode": emotion_mode}
     print(f"[INFO] POST {url}")
     print(f"[INFO] payload: {json.dumps(payload, ensure_ascii=False)}")
     resp = post_json(url, payload)
@@ -41,10 +41,13 @@ def cmd_retrieve(base_url: str, query: str, k: int):
         audio_path = h.get("audio_path", "")
         filename = h.get("filename", "")
         score = h.get("score", None)
+        emotion = h.get("emotion", None)
+        emotion_score = h.get("emotion_score", None)
         print(f"- #{i}")
         print(f"  score    : {score}")
         print(f"  filename : {filename}")
         print(f"  audio    : {audio_path}")
+        print(f"  emotion  : {emotion} ({emotion_score})")
         print(f"  text     : {transcript[:120]}{'...' if len(transcript) > 120 else ''}")
     print("")
 
@@ -79,6 +82,8 @@ def main():
     p_retrieve = sub.add_parser("retrieve", help="相似度查詢")
     p_retrieve.add_argument("-q", "--query", required=True, help="查詢文字")
     p_retrieve.add_argument("-k", "--k", type=int, default=3, help="回傳前 k 筆（1-20）")
+    p_retrieve.add_argument("-e", "--emotion", default=None, help="期望情緒（例如：happy）")
+    p_retrieve.add_argument("--mode", choices=["off", "soft", "strict"], default="off", help="情緒模式：off/soft/strict")
 
     args = parser.parse_args()
 
@@ -86,10 +91,15 @@ def main():
         cmd_reindex(args.base_url)
     elif args.cmd == "retrieve":
         k = max(1, min(20, int(args.k)))
-        cmd_retrieve(args.base_url, args.query, k)
+        cmd_retrieve(args.base_url, args.query, k, args.emotion, args.mode)
     else:
         parser.print_help()
 
 
 if __name__ == "__main__":
     main()
+    
+# 測試查詢
+# 純語義：python test_client.py retrieve -q "安樂死"
+# 軟性重排（優先 happy）：python test_client.py retrieve -q "安樂死" -e happy --mode soft
+# 嚴格只要 happy（找不到會回退軟性）：python test_client.py retrieve -q "安樂死" -e happy --mode strict

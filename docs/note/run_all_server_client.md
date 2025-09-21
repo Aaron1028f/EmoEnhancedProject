@@ -26,6 +26,12 @@ python api_v2_lk_save_wav.py
 cd server/models/TTS/index-tts
 conda activate indextts
 CUDA_VISIBLE_DEVICES=0 uv run indextts/api_indextts.py --cuda_kernel --port 40000
+# ---------------------------------------------------------------------
+# run RAG server for audio prompt selection
+conda activate roleplay
+cd server/models/RAG/audio_prompt_selection
+python server.py
+
 # =====================================================================
 # =====================================================================
 # run EmoGene server
