@@ -1,3 +1,5 @@
+GEN_TALKING_HEAD = True
+
 import os
 import sys
 import traceback
@@ -193,7 +195,8 @@ async def tts_handle(req: dict):
                         try:
                             full_np = np.concatenate(accum_np, axis=0)
                             wav_path = _save_wav(full_np, sr_for_save)
-                            # notify_emogene_fire_and_forget(wav_path)
+                            if GEN_TALKING_HEAD:
+                                notify_emogene_fire_and_forget(wav_path)
                         except Exception:
                             traceback.print_exc()
             # 設定正確的 Content-Type
@@ -223,7 +226,8 @@ async def tts_handle(req: dict):
             # 存檔並通知 Webhook
             try:
                 wav_path = _save_wav(full_audio_np, sr)
-                # notify_emogene_fire_and_forget(wav_path)
+                if GEN_TALKING_HEAD:
+                    notify_emogene_fire_and_forget(wav_path)
             except Exception:
                 traceback.print_exc()
 

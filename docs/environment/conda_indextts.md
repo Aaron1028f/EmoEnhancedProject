@@ -6,7 +6,9 @@ conda activate indextts
 
 # install cuda toolkit 12.8 (https://anaconda.org/nvidia/cuda-toolkit)
 # conda install nvidia/label/cuda-12.8.0::cuda-toolkit (this one failed)
-conda install nvidia/label/cuda-12.8.1::cuda-toolkit # (available)
+conda install nvidia/label/cuda-12.8.1::cuda-toolkit # (available) (deepspeed CUDA error)
+# conda install nvidia/label/cuda-12.9.0::cuda-toolkit # (try) (this one failed)
+conda install nvidia/label/cuda-12.9.1::cuda-toolkit # (available) (deepspeed CUDA error)
 
 # download repo
 git lfs install

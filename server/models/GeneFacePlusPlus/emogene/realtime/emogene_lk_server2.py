@@ -1,4 +1,4 @@
-ROOM_NAME = 'playground-UWtF-aobs'
+ROOM_NAME = 'playground-POaA-JWw2'
 
 import os, sys
 sys.path.append('./')
@@ -217,6 +217,10 @@ publish_queue: asyncio.Queue | None = None
 publisher_task: asyncio.Task | None = None
 # 新增：序列化推論的鎖
 inference_lock: asyncio.Lock | None = None
+# 新增：推論佇列與 worker
+inference_queue: asyncio.Queue | None = None
+inference_task: asyncio.Task | None = None
+
 
 @dataclass
 class PublishJob:
@@ -224,6 +228,14 @@ class PublishJob:
     video_path: str
     publish_audio: bool
     done: asyncio.Future  # 若不需等待結果，可以不使用
+    
+# 新增：推論工作
+@dataclass
+class InferenceJob:
+    audio_path: str
+    room_name: str
+    publish_audio: bool
+    done: asyncio.Future | None = None
 
 MODEL_INPUT_MAY = {
     # input output setting
@@ -265,7 +277,7 @@ MODEL_INPUT_MAY = {
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # START
-    global args, inferer_instance, publish_queue, publisher_task, inference_lock
+    global args, inferer_instance, publish_queue, publisher_task, inference_lock, inference_queue, inference_task
     
     print("Initializing model...")
     inferer_instance = GeneFace2Infer(
@@ -277,6 +289,7 @@ async def lifespan(app: FastAPI):
         device=MODEL_INPUT_MAY['device']
     )
     publish_queue = asyncio.Queue()
+    inference_queue = asyncio.Queue()
     inference_lock = asyncio.Lock()
 
     async def publisher_worker():
@@ -304,7 +317,46 @@ async def lifespan(app: FastAPI):
             logger.info("publisher worker cancelled")
             raise
 
+    # 新增：推論 worker（推論完成後再排入發布佇列）
+    async def inference_worker():
+        logger.info("inference worker started")
+        try:
+            while True:
+                job: InferenceJob = await inference_queue.get()
+                try:
+                    inp = MODEL_INPUT_MAY.copy()
+                    inp['drv_audio_name'] = job.audio_path
+                    out_dir = "emogene/DATA/temp"
+                    os.makedirs(out_dir, exist_ok=True)
+                    inp['out_name'] = f"{out_dir}/{Path(job.audio_path).stem}_out.mp4"
+
+                    if inference_lock is None:
+                        raise RuntimeError("inference lock not initialized")
+                    async with inference_lock:
+                        video_path = await asyncio.to_thread(inferer_instance.infer_once, inp)
+
+                    # 推論完成後，排入發布
+                    if publish_queue is None:
+                        raise RuntimeError("publish queue not initialized")
+                    loop = asyncio.get_running_loop()
+                    done_future = loop.create_future()
+                    await publish_queue.put(PublishJob(job.room_name, video_path, job.publish_audio, done_future))
+
+                    if job.done and not job.done.done():
+                        job.done.set_result({"video_path": video_path, "queued_publish": True})
+                except Exception as e:
+                    logger.exception("inference failed")
+                    if job.done and not job.done.done():
+                        job.done.set_result({"video_path": None, "error": f"inference failed: {e}"})
+                finally:
+                    inference_queue.task_done()
+        except asyncio.CancelledError:
+            logger.info("inference worker cancelled")
+            raise
+
+
     publisher_task = asyncio.create_task(publisher_worker())
+    inference_task = asyncio.create_task(inference_worker())
 
     # 如需啟動時測試播一支影片，也請透過佇列排隊，而不是直接呼叫
     test_video_path = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/DATA/lk_temp.mp4'
@@ -332,10 +384,14 @@ async def lifespan(app: FastAPI):
             await publisher_task
         except asyncio.CancelledError:
             pass
-    # 停止 idle，不關閉 tracks（依需求可補關閉/斷線）
+    if inference_task:
+        inference_task.cancel()
+        try:
+            await inference_task
+        except asyncio.CancelledError:
+            pass
     await stop_idle()
     inferer_instance = None
-
 
 app = FastAPI(lifespan=lifespan)
 
@@ -346,72 +402,22 @@ async def generate_full_video_api(request: GenerateRequest):
     """
     if not os.path.exists(request.audio_path):
         return {"error": f"Audio file not found: {request.audio_path}", "video_path": None, "accepted": False}
-    # return {"error": None, "video_path": None, "accepted": True}
-    
-    
-    # just testing
-    # video_path = '/home/aaron/project/server/models/GeneFacePlusPlus/emogene/DATA/lk_temp.mp4'
-    # await publish_video_to_room(request.room_name, video_path, publish_audio=request.publish_audio)
-    
-    
-    # set the input audio path and output video path
-    inp = MODEL_INPUT_MAY.copy()
-    inp['drv_audio_name'] = request.audio_path
-    inp['out_name'] = f"emogene/DATA/temp/{request.audio_path.split('/')[-1].split('.')[0]}_out.mp4"
-    
-    
-    # check if the path exist
-    if not os.path.exists(inp['out_name']):
-        os.makedirs(os.path.dirname(inp['out_name']), exist_ok=True)
-    
-    try:
-        if inference_lock is None:
-            raise RuntimeError("inference lock not initialized")
-        async with inference_lock:
-            video_path = await asyncio.to_thread(inferer_instance.infer_once, inp)
-    except Exception as e:
-        return {"video_path": None, "error": f"inference failed: {e}", "published": False}
 
+    # 改為只排入推論佇列，立即回應
     try:
+        if inference_queue is None:
+            return {"error": "inference queue not initialized", "video_path": None, "accepted": False}
         loop = asyncio.get_running_loop()
-        done_future = loop.create_future()
-        if publish_queue is None:
-            return {"video_path": video_path, "error": "publish queue not initialized", "published": False}
-        await publish_queue.put(PublishJob(request.room_name, video_path, request.publish_audio, done_future))
-        # 立即回應，表示已排隊等待發佈；如需等發佈完成，可 await done_future
-        return {"video_path": video_path, "error": None, "queued": True, "published": False}
+        # 如果將來想等待結果，可傳 future；目前 fire-and-forget 就傳 None
+        await inference_queue.put(InferenceJob(
+            audio_path=request.audio_path,
+            room_name=request.room_name,
+            publish_audio=request.publish_audio,
+            done=None
+        ))
+        return {"error": None, "video_path": None, "accepted": True, "queued": True}
     except Exception as e:
-        return {"video_path": video_path, "error": f"enqueue failed: {e}", "published": False}
-
-    # try:
-    #     await publish_video_to_room(request.room_name, video_path, publish_audio=request.publish_audio)
-    #     return {"video_path": video_path, "error": None, "published": True}
-    # except Exception as e:
-    #     return {"video_path": video_path, "error": f"publish failed: {e}", "published": False}
-
-    
-# @app.post("/generate_streaming_video")
-# async def generate_streaming_video(request: GenerateRequest):
-#     """
-#     Generate a streaming video from the given audio file.
-#     """
-#     return
-
-#     if not os.path.exists(request.audio_path):
-#         return {"error": f"Audio file not found: {request.audio_path}", "video_path": None}
-
-#     # set the input audio path and output video path
-#     inp = MODEL_INPUT_MAY.copy()
-#     inp['drv_audio_name'] = request.audio_path
-
-#     try:
-#         print("Starting inference for API request...")
-#         video_path = inferer_instance.infer_once(inp)
-#         print(f"API inference successful. Video at: {video_path}")
-#         return {"video_path": video_path, "error": None}
-#     except Exception as e:
-#         print(f"API inference failed: {e}")
-#         return {"video_path": None, "error": str(e)}
+        return {"error": f"enqueue failed: {e}", "video_path": None, "accepted": False}
 
 # =================================================================================================
 # Livekit agent
@@ -623,17 +629,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-# async def main():
-#     config = uvicorn.Config(app, host="0.0.0.0", port=31000)
-#     server = uvicorn.Server(config)
-    
-#     # await server.serve()
-#     await asyncio.gather(
-#         server.serve(),
-#         cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
-#     )
-
-# if __name__ == "__main__":
-#     asyncio.run(main())

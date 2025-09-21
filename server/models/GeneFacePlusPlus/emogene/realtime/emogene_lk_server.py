@@ -40,7 +40,7 @@ logger = logging.getLogger("video_streamer_agent")
 # =================================================================================================
 # Fast API
 # =================================================================================================
-ROOM_NAME = 'playground-yCLa-5XL6'
+ROOM_NAME = 'playground-RNbH-yGrx'
 
 class GenerateRequest(BaseModel):
     audio_path: str
