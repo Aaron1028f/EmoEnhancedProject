@@ -23,9 +23,10 @@ python api_v2_lk_save_wav.py
 # `notify_emogene_fire_and_forget()` call EmoGene server, comment out if only audio chat is needed
 # ---------------------------------------------------------------------
 # run TTS server (index-tts2), slower but higher quality (also with emotion control support)
+# remember to check the wheather to generate the talking head 
 cd server/models/TTS/index-tts
 conda activate indextts
-CUDA_VISIBLE_DEVICES=0 uv run indextts/api_indextts.py --cuda_kernel --port 40000
+CUDA_VISIBLE_DEVICES=1 uv run indextts/api_indextts.py --cuda_kernel --port 40000
 # ---------------------------------------------------------------------
 # run RAG server for audio prompt selection
 conda activate roleplay
@@ -38,7 +39,8 @@ python server.py
 conda activate geneface_py310
 cd server/models/GeneFacePlusPlus/
 # python emogene/realtime/emogene_lk_server.py (with no placeholder image)
-python emogene/realtime/emogene_lk_server2.py
+# remember to modify the ROOM_NAME in emogene_lk_server3.py
+python emogene/realtime/emogene_lk_server3.py 
 
 # =====================================================================
 # =====================================================================
