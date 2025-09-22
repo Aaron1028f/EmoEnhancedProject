@@ -1,5 +1,5 @@
-ROOM_NAME = 'playground-POaA-JWw2'
-NUM_INFERER = 3
+ROOM_NAME = 'playground-NvXe-6aCq'
+NUM_INFERER = 2
 
 import os, sys
 sys.path.append('./')
@@ -318,6 +318,42 @@ MODEL_INPUT_MAY = {
     'low_memory_usage': False
 }
 
+MODEL_INPUT_FENG = {
+    # input output setting
+    'out_name': "emogene/DATA/lk_temp.mp4",
+    'drv_audio_name': "emogene/DATA/happy.wav",
+    
+    # model path params
+    'audio2secc': 'checkpoints/audio2motion_vae',
+    'postnet_dir': '',
+    'head_model_dir': '',
+    'torso_model_dir': 'checkpoints/motion2video_nerf/feng_torso', 
+    'use_emotalk': True,
+    'device': 'cuda:0',
+    
+    # emogene settings
+    'blend_path': "emotalk/feng_rigged.blend",
+    'lm468_bs_np_path': "emotalk/temp_result/lm468_bs_np.npy",
+    'bs_lm_area': 9,
+    'debug': False,
+    'use_emotalk': True,
+    'level': 1,
+    'person': 3,
+    'output_video': False,
+    'bs52_level': 1.0,
+    
+    # GeneFace++ seettings
+    'blink_mode': 'none',
+    'drv_pose': 'nearest',
+    'lle_percent': 1,
+    'temperature': 0,
+    'mouth_amp': 0.4,
+    'raymarching_end_threshold': 0.01,
+    'fp16': False,
+    'low_memory_usage': False
+}
+
+MODEL_INPUT = MODEL_INPUT_FENG  # 可改成 MODEL_INPUT_FENG 試試
 
 # FastAPI application lifespan
 @asynccontextmanager
@@ -330,24 +366,24 @@ async def lifespan(app: FastAPI):
     print("Initializing model...")
     # 建立第一個推論實例（沿用既有變數以相容）
     inferer_instance = GeneFace2Infer(
-        audio2secc_dir=MODEL_INPUT_MAY['audio2secc'],
-        postnet_dir=MODEL_INPUT_MAY['postnet_dir'],
-        head_model_dir=MODEL_INPUT_MAY['head_model_dir'],
-        torso_model_dir=MODEL_INPUT_MAY['torso_model_dir'],
-        use_emotalk=MODEL_INPUT_MAY['use_emotalk'],
-        device=MODEL_INPUT_MAY['device']
+        audio2secc_dir=MODEL_INPUT['audio2secc'],
+        postnet_dir=MODEL_INPUT['postnet_dir'],
+        head_model_dir=MODEL_INPUT['head_model_dir'],
+        torso_model_dir=MODEL_INPUT['torso_model_dir'],
+        use_emotalk=MODEL_INPUT['use_emotalk'],
+        device=MODEL_INPUT['device']
     )
 
     # 其餘推論實例
     inferers = [inferer_instance]
     for i in range(1, INFER_CONCURRENCY):
         inferers.append(GeneFace2Infer(
-            audio2secc_dir=MODEL_INPUT_MAY['audio2secc'],
-            postnet_dir=MODEL_INPUT_MAY['postnet_dir'],
-            head_model_dir=MODEL_INPUT_MAY['head_model_dir'],
-            torso_model_dir=MODEL_INPUT_MAY['torso_model_dir'],
-            use_emotalk=MODEL_INPUT_MAY['use_emotalk'],
-            device=MODEL_INPUT_MAY['device']
+            audio2secc_dir=MODEL_INPUT['audio2secc'],
+            postnet_dir=MODEL_INPUT['postnet_dir'],
+            head_model_dir=MODEL_INPUT['head_model_dir'],
+            torso_model_dir=MODEL_INPUT['torso_model_dir'],
+            use_emotalk=MODEL_INPUT['use_emotalk'],
+            device=MODEL_INPUT['device']
         ))
         
     publish_queue = asyncio.Queue()
