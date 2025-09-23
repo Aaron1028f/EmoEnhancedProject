@@ -1,4 +1,4 @@
-ROOM_NAME = 'playground-NvXe-6aCq'
+ROOM_NAME = 'playground-aVGC-VMwb'
 NUM_INFERER = 2
 
 import os, sys
@@ -37,11 +37,48 @@ torchvision.disable_beta_transforms_warning()
 warnings.filterwarnings("ignore", category=UserWarning, module="librosa")
 
 from dotenv import load_dotenv
-load_dotenv(".env.local")
+# load_dotenv(".env.local")
+load_dotenv("emogene/realtime/.env.local")
 logger = logging.getLogger("video_streamer_agent")
 
 # 推論並行度（可用環境變數調整）
 INFER_CONCURRENCY = int(os.getenv("EMOGENE_INFER_CONCURRENCY", NUM_INFERER))
+
+from data_gen.utils.process_audio.extract_hubert import get_hubert_from_16k_wav
+
+def _ensure_wav16k(audio_path: str) -> str:
+    if audio_path.lower().endswith("_16k.wav"):
+        return audio_path
+    out_path = f"{os.path.splitext(audio_path)[0]}_16k.wav"
+    if not os.path.exists(out_path):
+        os.system(f"ffmpeg -i {audio_path} -f wav -ar 16000 -v quiet -y {out_path}")
+    return out_path
+
+CURRENT_FRAME_ID = 0
+def estimate_expected_frames_via_hubert(audio_path: str) -> int:
+    import time
+    wav16k = _ensure_wav16k(audio_path)
+    start = time.perf_counter()
+    hubert = get_hubert_from_16k_wav(wav16k)
+    # 與推論一致的對齊與換算
+    hubert = hubert[:len(hubert)//8*8]
+    t = hubert.shape[0]
+    # t = int(hubert.shape[0])
+    # t = t - (t % 8)
+    frames = max(t // 2, 1)
+    # print(f"hubert estimate took {time.perf_counter() - start:.4f}s, frames={frames}")
+
+    # calculate start and end frame id
+    global CURRENT_FRAME_ID
+    # check CURRENT_FRAME_ID overflow
+    if CURRENT_FRAME_ID + frames > 2400:
+        CURRENT_FRAME_ID = 0
+    
+    start_frame_id = CURRENT_FRAME_ID
+    end_frame_id = start_frame_id + frames
+    CURRENT_FRAME_ID = end_frame_id
+
+    return start_frame_id, end_frame_id
 
 persistent_room: rtc.Room | None = None
 video_source: rtc.VideoSource | None = None
@@ -274,6 +311,8 @@ class InferenceJob:
     room_name: str
     publish_audio: bool
     done: asyncio.Future | None = None
+    drv_pose_range: str = 'nearest'
+
 
 # 新增：推論完成事件（給排序 worker）
 @dataclass
@@ -421,8 +460,9 @@ async def lifespan(app: FastAPI):
                 while True:
                     job: InferenceJob = await inference_queue.get()
                     try:
-                        inp = MODEL_INPUT_MAY.copy()
+                        inp = MODEL_INPUT.copy()
                         inp['drv_audio_name'] = job.audio_path
+                        inp['drv_pose'] = job.drv_pose_range
                         out_dir = "emogene/DATA/temp"
                         os.makedirs(out_dir, exist_ok=True)
                         inp['out_name'] = f"{out_dir}/{Path(job.audio_path).stem}_out.mp4"
@@ -501,7 +541,7 @@ async def lifespan(app: FastAPI):
 
     # 預熱：仍只用第一個實例
     print('Start run once to prewarm the model')
-    inp = MODEL_INPUT_MAY.copy()
+    inp = MODEL_INPUT.copy()
     inp['drv_audio_name'] = "emogene/DATA/happy.wav"
     inferer_instance.infer_once(inp)
     print('Prewarming complete.')
@@ -556,13 +596,17 @@ async def generate_full_video_api(request: GenerateRequest):
         # 指派序號，確保發布順序
         seq_id = seq_counter
         seq_counter += 1
+        
+        start_frame_id, end_frame_id = estimate_expected_frames_via_hubert(request.audio_path)
+        logger.info(f"enqueue job seq_id={seq_id}, expected_frames={end_frame_id-start_frame_id}")
 
         await inference_queue.put(InferenceJob(
             seq_id=seq_id,
             audio_path=request.audio_path,
             room_name=request.room_name,
             publish_audio=request.publish_audio,
-            done=None
+            done=None,
+            drv_pose_range=f'{start_frame_id}-{end_frame_id}' if end_frame_id > start_frame_id else 'nearest'
         ))
         return {"error": None, "video_path": None, "accepted": True, "queued": True, "seq_id": seq_id}
     except Exception as e:

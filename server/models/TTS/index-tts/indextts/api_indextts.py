@@ -1,4 +1,4 @@
-GEN_TALKING_HEAD = True
+GEN_TALKING_HEAD = False
 
 import os
 import sys

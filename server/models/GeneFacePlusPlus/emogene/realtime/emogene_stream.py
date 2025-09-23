@@ -913,6 +913,12 @@ class GeneFace2Infer:
     def save_wav16k(self, audio_name):
         supported_types = ('.wav', '.mp3', '.mp4', '.avi')
         assert audio_name.endswith(supported_types), f"Now we only support {','.join(supported_types)} as audio source!"
+        
+        if audio_name.lower().endswith('_16k.wav'):
+            self.wav16k_name = audio_name
+            print(f"Reuse existing 16k wav: {audio_name}")
+            return
+        
         wav16k_name = audio_name[:-4] + '_16k.wav'
         self.wav16k_name = wav16k_name
         extract_wav_cmd = f"ffmpeg -i {audio_name} -f wav -ar 16000 -v quiet -y {wav16k_name} -y"
