@@ -1,4 +1,5 @@
-GEN_TALKING_HEAD = False
+GEN_TALKING_HEAD = True # call EmoGene webhook to generate talking head video
+# GEN_TALKING_HEAD = False # for testing TTS only, do not call EmoGene webhook
 
 import os
 import sys

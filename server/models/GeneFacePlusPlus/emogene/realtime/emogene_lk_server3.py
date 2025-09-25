@@ -1,4 +1,4 @@
-ROOM_NAME = 'playground-aVGC-VMwb'
+ROOM_NAME = 'playground-VhN2-dIIs'
 NUM_INFERER = 2
 
 import os, sys
@@ -71,7 +71,7 @@ def estimate_expected_frames_via_hubert(audio_path: str) -> int:
     # calculate start and end frame id
     global CURRENT_FRAME_ID
     # check CURRENT_FRAME_ID overflow
-    if CURRENT_FRAME_ID + frames > 2400:
+    if CURRENT_FRAME_ID + frames > 1200:
         CURRENT_FRAME_ID = 0
     
     start_frame_id = CURRENT_FRAME_ID

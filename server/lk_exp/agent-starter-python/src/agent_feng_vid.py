@@ -1,3 +1,6 @@
+TTS_VOLUME=0 # mute TTS
+# TTS_VOLUME=50 # default volume level: 50; to mute TTS, set volume=0
+
 import logging
 
 from dotenv import load_dotenv
@@ -42,7 +45,7 @@ load_dotenv(".env.local")
 
 class Assistant(Agent):
     def __init__(self) -> None:
-        self.volume: int = 50  # default volume level: 50; to mute TTS, set volume=0
+        self.volume: int = TTS_VOLUME  # default volume level: 50; to mute TTS, set volume=0
         super().__init__(
             instructions="""You are a helpful voice AI assistant.
             You eagerly assist users with their questions by providing information from your extensive knowledge.
