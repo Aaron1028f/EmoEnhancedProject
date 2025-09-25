@@ -1,6 +1,6 @@
 ## Dr. Feng's Virtual Online Clinic (with video generation)
-<!-- <video src="https://github.com/user-attachments/assets/1dc56e03-cdd0-411b-a0a7-8944c245ffc0" controls="controls" style="max-width: 720px;">
-</video> -->
+<video src="https://github.com/user-attachments/assets/1dc56e03-cdd0-411b-a0a7-8944c245ffc0" controls="controls" style="max-width: 720px;">
+</video>
 
 
 ## Demo Videos
