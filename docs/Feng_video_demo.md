@@ -1,3 +1,8 @@
+## Dr. Feng's Virtual Online Clinic (only audio generation, emotion control demo)
+<video src="https://github.com/user-attachments/assets/8300b35c-8937-4b24-87d6-59e0625ff979" controls="controls" style="max-width: 720px;">
+</video>
+
+
 ## Dr. Feng's Virtual Online Clinic (with video generation)
 <video src="https://github.com/user-attachments/assets/1dc56e03-cdd0-411b-a0a7-8944c245ffc0" controls="controls" style="max-width: 720px;">
 </video>
