@@ -44,20 +44,42 @@ For each picture, we provide comparisons from left to right:
 #### **Happy**
 ![alt text](assets/emogene/demo_pictures/happy.png)
 
+<video src="https://github.com/user-attachments/assets/88ad61df-cea5-4cff-abcf-d7860eda7aa1" controls="controls" style="max-width: 720px;">
+</video>
+
 #### **Surprised**
 ![alt text](assets/emogene/demo_pictures/surprised.png)
+
+<video src="https://github.com/user-attachments/assets/945fd19d-7402-4e6a-88f2-f35d2da0916c" controls="controls" style="max-width: 720px;">
+</video>
 
 #### **Angry**
 ![alt text](assets/emogene/demo_pictures/angry.png)
 
+<video src="https://github.com/user-attachments/assets/e1dcbe06-574e-475d-b11d-f07e08b20226" controls="controls" style="max-width: 720px;">
+</video>
+
 #### **Sad**
 ![alt text](assets/emogene/demo_pictures/sad.png)
+
+<video src="https://github.com/user-attachments/assets/405218dc-08d0-438b-83f7-01694f639d37" controls="controls" style="max-width: 720px;">
+</video>
 
 #### **Fearful**
 ![alt text](assets/emogene/demo_pictures/fearful.png)
 
+<video src="https://github.com/user-attachments/assets/d72a8439-b559-4874-9114-983937d32c7b" controls="controls" style="max-width: 720px;">
+</video>
+
 #### **Neutral**
 ![alt text](assets/emogene/demo_pictures/neutral.png)
 
+<video src="https://github.com/user-attachments/assets/e8320458-c013-4bd5-b09a-98691720e027" controls="controls" style="max-width: 720px;">
+</video>
+
 #### **Laughter in Audio**
 ![alt text](assets/emogene/demo_pictures/laughter.png)
+
+<video src="https://github.com/user-attachments/assets/2ae52c99-b35a-412b-91b6-68a6a425d2cf" controls="controls" style="max-width: 720px;">
+</video>
+
