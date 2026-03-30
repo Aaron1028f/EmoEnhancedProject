@@ -27,6 +27,14 @@ Our App provides multimodal interaction capabilities, allowing users to engage i
 
 > Users can chat with [`Dr. Feng`](https://www.youtube.com/@xhealthlab) for any consultation, and Dr. Feng will respond with both text and speech based on his expertise and personality.
 
+---
+
+### Installation
+
+Go to the `docs/install/` directory for detailed installation instructions of each component, including the talking head generation model `EmoGene`, the roleplay system with RAG and LLM, and the emotional TTS model `IndexTTS2`.
+
+---
+
 ## EmoGene: Our novel emotion-enhanced talking head generation, combining EmoTalk and GeneFace++ for speech emotion-aware talking head synthesis.
 See [`docs/EmoGene.md`](https://github.com/Aaron1028f/EmoEnhancedProject/blob/main/docs/EmoGene.md) for more details of **Model Pipeline** and **Video Demo**.
 
