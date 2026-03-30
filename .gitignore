@@ -25,6 +25,8 @@
 # for Feng
 !server/models/GeneFacePlusPlus/emotalk/feng_rigged.blend
 
+!server/models/TTS/index-tts/examples/**
+
 # 不要忽略 .gitignore 檔案本身
 !.gitignore
 
