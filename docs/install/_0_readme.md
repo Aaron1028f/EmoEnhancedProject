@@ -12,6 +12,6 @@ Follow the instructions in the document to install the project. Each part needs 
 
 ## Run the server and client
 
-After installing the project, you can run the server and client to experience the features of the project. The server and client are designed to work together, and you can follow the instructions in the document to run them. Make sure to start the server before running the client, and ensure that all necessary dependencies are installed and configured correctly.
+
 
 

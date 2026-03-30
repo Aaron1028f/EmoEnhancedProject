@@ -30,3 +30,5 @@
 
 !assets/
 !assets/**
+
+!docs/install/**

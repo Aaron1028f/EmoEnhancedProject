@@ -19,6 +19,9 @@ To install EmoTalk, follow the steps in https://github.com/psyai-net/EmoTalk_rel
 ###  3.1 Copy our modified version of GeneFace++ to your local GeneFace++ directory
 Copy the contents of `server/models/GeneFacePlusPlus/emogene` to your local GeneFace++ directory and put them in the correct directory, you can follow the directory structure in this repository. 
 
+
+Copy `server/models/GeneFacePlusPlus/emotalk/render_testing_92.blend` and `server/models/GeneFacePlusPlus/emotalk/feng_rigged.blend` to the corresponding directories in your local EmoTalk directory.
+
 The main script for the demo is `server/models/GeneFacePlusPlus/emogene/app_emogene.py`, which is a gradio demo to show the emotion enhancement results of EmoGene.
 
 ### 3.2 Run the demo script for EmoGene
