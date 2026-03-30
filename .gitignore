@@ -19,6 +19,12 @@
 
 !*.list
 
+# for May
+!server/models/GeneFacePlusPlus/emotalk/render_testing_92.blend
+
+# for Feng
+!server/models/GeneFacePlusPlus/emotalk/feng_rigged.blend
+
 # 不要忽略 .gitignore 檔案本身
 !.gitignore
 
