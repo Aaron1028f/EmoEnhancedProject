@@ -19,8 +19,3 @@ python emotion_classification.py
 
 
 ```
-
-
-
-## What is Audio Prompt Selection working on?
-
