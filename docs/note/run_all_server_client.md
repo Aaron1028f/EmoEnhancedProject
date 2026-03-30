@@ -90,4 +90,7 @@ cd server/lk_exp/server_src_bin/
 cd server/models/TTS/index-tts
 conda activate indextts
 CUDA_VISIBLE_DEVICES=0 uv run webui.py --cuda_kernel --port 40010 --deepspeed
+
+CUDA_VISIBLE_DEVICES=3 uv run webui.py --cuda_kernel --port 40010
+
 ```

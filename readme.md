@@ -31,7 +31,7 @@ Our App provides multimodal interaction capabilities, allowing users to engage i
 
 ### Installation
 
-Go to the `docs/install/` directory for detailed installation instructions of each component, including the talking head generation model `EmoGene`, the roleplay system with RAG and LLM, and the emotional TTS model `IndexTTS2`.
+Go to the `docs/install_and_run/` directory for detailed installation instructions of each component, including the talking head generation model `EmoGene`, the roleplay system with RAG and LLM, and the emotional TTS model `IndexTTS2`.
 
 ---
 

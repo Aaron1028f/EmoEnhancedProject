@@ -1,4 +1,4 @@
-ROOM_NAME = 'playground-BOT5-yDVO'
+ROOM_NAME = 'playground-Mgr7-8qUq'
 NUM_INFERER = 2
 
 import os, sys

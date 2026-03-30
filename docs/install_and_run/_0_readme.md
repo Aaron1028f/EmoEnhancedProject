@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Follow the instructions in the document to install the project. Each part needs independent installation and environment setup, and you can choose to install the part you need. The installation is a bit complicated, you can choose which part to install based on your needs. We also provide the installation for each part in separate documents, you can refer to the corresponding document for detailed installation instructions.
+Follow the instructions in the document to install the project. Each part needs independent installation and environment setup, and you can choose to install the part you need.
 
 1. `docs/install/_1_emogene.md`
 2. `docs/install/_2_roleplay.md`
@@ -22,8 +22,8 @@ Follow the instructions in the document to install the project. Each part needs 
 
 > Files in the repo but not mentioned above are just for experimental purposes.
 
-## Run the server and client
-
+## Run the chatbot
+Go check `docs/install/run_chatbot.md` for the instruction to run the servers and the client for the chatbot demo.
 
 
 
